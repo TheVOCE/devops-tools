@@ -57,11 +57,11 @@
         "setupTiktoken:windows": "copy node_modules\\@vscode\\prompt-tsx\\dist\\base\\tokenizer\\cl100k_base.tiktoken out\\"
     },
     "devDependencies": {
-        "@types/node": "^20.5.9",
-        "@vscode/prompt-tsx": "^0.1.10-alpha",
-        "eslint": "^7.22.0",
+        "@types/node": "^20.14.1",
+        "@vscode/prompt-tsx": "^0.1.12-alpha",
+        "eslint": "^9.4.0",
         "run-script-os": "^1.1.6",
         "tslint": "^6.1.3",
-        "typescript": "^4.0.3"
+        "typescript": "^5.4.5"
     }
 }
