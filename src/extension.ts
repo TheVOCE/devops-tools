@@ -9,7 +9,6 @@ const OPEN_URL_COMMAND = "Open_URL";
 
 interface Comment {
   id: number;
-
   url: string;
   body?: string | undefined;
 }
@@ -41,6 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (request.command == "issue") {
       try {
         const [model] = await vscode.lm.selectChatModels(MODEL_SELECTOR);
+        //parse user prompt for specials
         const match = request.prompt.match(/!(\d+)(\+?)/);
         const [issueId, commentsUsage] = match
           ? [match[1], match[2]]
@@ -49,10 +49,10 @@ export function activate(context: vscode.ExtensionContext) {
         stream.progress(`Issue ${issueId} idetified.`);
         const ghMatch = request.prompt.match(/gh:(.+)\/(.+?)[\s;,\/:]/);
         const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
-        stream.progress(`GH Repo ${ghRepo} idetified.`);
-        stream.progress(`GH owner ${ghOwner} idetified.`);
+        if (ghRepo) stream.progress(`GH Repo ${ghRepo} idetified.`);
+        if (ghOwner) stream.progress(`GH owner ${ghOwner} idetified.`);
 
-        const ghResult = await getIssueById(
+        const ghResult = await getIssueAndCommentsById(
           Number(issueId),
           stream,
           ghOwner,
@@ -104,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
   // when you type `@`, and can contribute sub-commands in the chat input
   // that appear when you type `/`.
   const chat = vscode.chat.createChatParticipant(PARTICIPANT_ID, handler);
-  //chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "cat.jpeg");
+  chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "XebiaLogo.jpeg");
   vscode.commands.registerCommand(OPEN_URL_COMMAND, async (url: string) => {
     vscode.env.openExternal(vscode.Uri.parse(url));
   });
@@ -132,7 +132,7 @@ function handleError(err: any, stream: vscode.ChatResponseStream): void {
 
 export function deactivate() {}
 
-async function getOwnerAndRepo(): Promise<
+async function getGitHubOwnerAndRepo(): Promise<
   { owner: string; repo: string } | undefined
 > {
   const editor = vscode.window.activeTextEditor;
@@ -178,7 +178,7 @@ async function getOwnerAndRepo(): Promise<
 }
 
 //get issue object from github by its issue id using octokit
-async function getIssueById(
+async function getIssueAndCommentsById(
   issue_number: number,
   stream: vscode.ChatResponseStream,
   ghOwner: string = "",
@@ -191,7 +191,7 @@ async function getIssueById(
   const octokit = new Octokit({ auth: session.accessToken });
   let owner = ghOwner;
   let repo = ghRepo;
-  const gatheredGhOwnerRepo = (await getOwnerAndRepo()) ?? {
+  const gatheredGhOwnerRepo = (await getGitHubOwnerAndRepo()) ?? {
     owner: "",
     repo: "",
   };
