@@ -4,7 +4,15 @@ import * as path from "path";
 import { Octokit } from "@octokit/rest";
 import * as git from "simple-git";
 
-const CAT_PARTICIPANT_ID = "xebia.copilot.issue-data-provider";
+const PARTICIPANT_ID = "xebia.copilot.issue-data-provider";
+const OPEN_URL_COMMAND = "Open_URL";
+
+interface Comment {
+  id: number;
+
+  url: string;
+  body?: string | undefined;
+}
 
 interface ICatChatResult extends vscode.ChatResult {
   metadata: {
@@ -33,13 +41,25 @@ export function activate(context: vscode.ExtensionContext) {
     if (request.command == "issue") {
       try {
         const [model] = await vscode.lm.selectChatModels(MODEL_SELECTOR);
-        const match = request.prompt.match(/!(\d+)/);
-        const issueId = match ? match[1] : undefined; //todo: error message no issue id found
+        const match = request.prompt.match(/!(\d+)(\+?)/);
+        const [issueId, commentsUsage] = match
+          ? [match[1], match[2]]
+          : ["", ""];
+
         stream.progress(`Issue ${issueId} idetified.`);
         const ghMatch = request.prompt.match(/gh:(.+)\/(.+?)[\s;,\/:]/);
         const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
         stream.progress(`GH Repo ${ghRepo} idetified.`);
         stream.progress(`GH owner ${ghOwner} idetified.`);
+
+        const ghResult = await getIssueById(
+          Number(issueId),
+          stream,
+          ghOwner,
+          ghRepo,
+          commentsUsage === "+"
+        );
+        StateIssueInStream(stream, ghResult?.issue, ghResult?.comments ?? []);
 
         if (model) {
           const messages = [
@@ -47,12 +67,14 @@ export function activate(context: vscode.ExtensionContext) {
               "You are a software product owner and you help your developers providing additional information for working on current software development task."
             ),
             vscode.LanguageModelChatMessage.User(
-              await GetIssueDataString(
-                issueId as string,
-                stream,
-                ghOwner,
-                ghRepo
-              )
+              `The issue to work on has the title: "${ghResult?.issue?.title}" and the description: ${ghResult?.issue?.body}. Use that information to give better answer for the following user query.` +
+                (ghResult?.comments && ghResult?.comments?.length > 0
+                  ? `Do also regard the comments: ${
+                      ghResult?.comments
+                        ?.map((comment) => comment.body)
+                        .join("\n\n") + ""
+                    }`
+                  : "")
             ),
             vscode.LanguageModelChatMessage.User(request.prompt),
           ];
@@ -62,14 +84,15 @@ export function activate(context: vscode.ExtensionContext) {
             stream.markdown(fragment);
           }
         }
+        stream.button({
+          command: OPEN_URL_COMMAND,
+          title: vscode.l10n.t("Open Issue in Browser"),
+          arguments: [ghResult?.issue?.html_url],
+        });
       } catch (err) {
         handleError(err, stream);
       }
 
-      // stream.button({
-      //   command: "Open_Issue",
-      //   title: vscode.l10n.t("Open Issue in Browser"),
-      // });
       return { metadata: { command: "issue" } };
     }
     //else if (request.command == "pullrequest") {
@@ -80,8 +103,11 @@ export function activate(context: vscode.ExtensionContext) {
   // Chat participants appear as top-level options in the chat input
   // when you type `@`, and can contribute sub-commands in the chat input
   // that appear when you type `/`.
-  const chat = vscode.chat.createChatParticipant(CAT_PARTICIPANT_ID, handler);
+  const chat = vscode.chat.createChatParticipant(PARTICIPANT_ID, handler);
   //chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "cat.jpeg");
+  vscode.commands.registerCommand(OPEN_URL_COMMAND, async (url: string) => {
+    vscode.env.openExternal(vscode.Uri.parse(url));
+  });
 }
 
 function handleError(err: any, stream: vscode.ChatResponseStream): void {
@@ -94,7 +120,7 @@ function handleError(err: any, stream: vscode.ChatResponseStream): void {
     if (err.cause instanceof Error && err.cause.message.includes("off_topic")) {
       stream.markdown(
         vscode.l10n.t(
-          "I'm sorry, I can only explain computer science concepts."
+          "I'm sorry, I can't help with that. Please ask me something else."
         )
       );
     }
@@ -156,7 +182,8 @@ async function getIssueById(
   issue_number: number,
   stream: vscode.ChatResponseStream,
   ghOwner: string = "",
-  ghRepo: string = ""
+  ghRepo: string = "",
+  withComments = false
 ) {
   const session = await vscode.authentication.getSession("github", ["repo"], {
     createIfNone: true,
@@ -174,32 +201,42 @@ async function getIssueById(
   }
   console.log(`Owner: ${owner}, Repo: ${repo}`);
   try {
-    const issue = await octokit.rest.issues.get({
-      owner,
-      repo,
-      issue_number,
-    });
-    stream.progress(`Issue "${issue.data.title}" loaded.`);
-    stream.markdown(`Issue: **${issue.data.title}**\n\n`);
-    stream.markdown(issue.data.body?.replaceAll("\n", "\n> ") + "");
-    stream.markdown("\n\n----\n\n");
-    stream.progress(`My suggestion....`);
-    return issue.data;
+    const issue = (
+      await octokit.rest.issues.get({
+        owner,
+        repo,
+        issue_number,
+      })
+    ).data;
+    let comments: Comment[] = [];
+    if (withComments)
+      comments = (
+        await octokit.rest.issues.listComments({
+          owner,
+          repo,
+          issue_number,
+        })
+      ).data as Comment[];
+
+    return { issue: issue, comments: comments };
   } catch (err) {
     console.error(err);
   }
 }
-
-async function GetIssueDataString(
-  issueId: string,
+function StateIssueInStream(
   stream: vscode.ChatResponseStream,
-  ghOwner: string = "",
-  ghRepo: string = ""
+  issue: any,
+  comments: Comment[]
 ) {
-  let issueNumber = Number(issueId);
-  if (isNaN(issueNumber))
-    console.log(`The provided issue number is not a number: ${issueId}`);
-  const issue = await getIssueById(issueNumber, stream, ghOwner, ghRepo);
-  let result = `The issue to work on has the title: "${issue?.title}" and the description: ${issue?.body}. Use that information to give better answer for the following user query.`;
-  return result;
+  stream.progress(`Issue "${issue.title}" loaded.`);
+  stream.markdown(`Issue: **${issue.title}**\n\n`);
+  stream.markdown(issue.body?.replaceAll("\n", "\n> ") + "");
+  if (comments?.length > 0) {
+    stream.markdown("\n\n_Comments_\n");
+    comments?.map((comment) =>
+      stream.markdown(`\n> ${comment.body?.replaceAll("\n", "\n> ") + ""}\n`)
+    );
+  }
+  stream.markdown("\n\n----\n\n");
+  stream.progress(`My suggestion....`);
 }
