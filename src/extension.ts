@@ -1,6 +1,6 @@
-import { renderPrompt, Cl100KBaseTokenizer } from "@vscode/prompt-tsx";
 import * as vscode from "vscode";
-import { PlayPrompt } from "./play";
+import * as cp from "child_process";
+import * as path from "path";
 import { Octokit } from "@octokit/rest";
 import * as git from "simple-git";
 
@@ -14,8 +14,9 @@ interface ICatChatResult extends vscode.ChatResult {
 
 const MODEL_SELECTOR: vscode.LanguageModelChatSelector = {
   vendor: "copilot",
-  family: "gpt-3.5-turbo",
+  family: "gpt-4",
 };
+//family: "gpt-3.5-turbo",
 //family: "gpt-4",
 
 export function activate(context: vscode.ExtensionContext) {
@@ -35,13 +36,23 @@ export function activate(context: vscode.ExtensionContext) {
         const match = request.prompt.match(/!(\d+)/);
         const issueId = match ? match[1] : undefined; //todo: error message no issue id found
         stream.progress(`Issue ${issueId} idetified.`);
+        const ghMatch = request.prompt.match(/gh:(.+)\/(.+?)[\s;,\/:]/);
+        const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
+        stream.progress(`GH Repo ${ghRepo} idetified.`);
+        stream.progress(`GH owner ${ghOwner} idetified.`);
+
         if (model) {
           const messages = [
             vscode.LanguageModelChatMessage.User(
               "You are a software product owner and you help your developers providing additional information for working on current software development task."
             ),
             vscode.LanguageModelChatMessage.User(
-              await GetIssueDataString(issueId as string, stream)
+              await GetIssueDataString(
+                issueId as string,
+                stream,
+                ghOwner,
+                ghRepo
+              )
             ),
             vscode.LanguageModelChatMessage.User(request.prompt),
           ];
@@ -55,6 +66,10 @@ export function activate(context: vscode.ExtensionContext) {
         handleError(err, stream);
       }
 
+      // stream.button({
+      //   command: "Open_Issue",
+      //   title: vscode.l10n.t("Open Issue in Browser"),
+      // });
       return { metadata: { command: "issue" } };
     }
     //else if (request.command == "pullrequest") {
@@ -100,44 +115,64 @@ async function getOwnerAndRepo(): Promise<
     return;
   }
 
-  // const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-  //   editor.document.uri
-  // );
-  // if (!workspaceFolder) {
-  //   console.error("The open file is not inside a workspace folder.");
-  //   return;
-  // }
+  let filePath = editor.document.uri.fsPath;
+  let fileDirectory = path.dirname(filePath);
+  let workspacePath = fileDirectory;
 
-  // const workspacePath = workspaceFolder.uri.fsPath;
-  // const gitRepo = git.gitP(workspacePath);
-  // const remotes = await gitRepo.getRemotes(true);
+  await cp.exec(
+    "git rev-parse --show-toplevel",
+    { cwd: fileDirectory },
+    (error, stdout) => {
+      if (error) {
+        console.log(`No Git repository found in ${fileDirectory}`);
+      } else {
+        workspacePath = stdout.trim();
+        console.log(`Git repository found in ${workspacePath}`);
+      }
+    }
+  );
 
-  // if (remotes.length === 0) {
-  //   console.error("No remote repository found.");
-  //   return;
-  // }
+  const gitRepo = git.gitP(workspacePath);
+  const remotes = await gitRepo.getRemotes(true);
 
-  // const remoteUrl = remotes[0].refs.fetch;
-  // const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
-  // if (!match) {
-  //   console.error("Remote repository is not a GitHub repository.");
-  //   return;
-  // }
+  if (remotes.length === 0) {
+    console.error("No remote repository found.");
+    return;
+  }
 
-  const [owner, repo] = ["harrybin", "copilot-chat-sample"]; //match[1].split("/");
+  const remoteUrl = remotes[0].refs.fetch;
+  const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
+  if (!match) {
+    console.error("Remote repository is not a GitHub repository.");
+    return;
+  }
+
+  const [owner, repo] = match[1].split("/");
   return { owner, repo };
 }
 
 //get issue object from github by its issue id using octokit
 async function getIssueById(
   issue_number: number,
-  stream: vscode.ChatResponseStream
+  stream: vscode.ChatResponseStream,
+  ghOwner: string = "",
+  ghRepo: string = ""
 ) {
   const session = await vscode.authentication.getSession("github", ["repo"], {
     createIfNone: true,
   });
   const octokit = new Octokit({ auth: session.accessToken });
-  const { owner, repo } = (await getOwnerAndRepo()) ?? { owner: "", repo: "" };
+  let owner = ghOwner;
+  let repo = ghRepo;
+  const gatheredGhOwnerRepo = (await getOwnerAndRepo()) ?? {
+    owner: "",
+    repo: "",
+  };
+  if (owner === "" && repo === "") {
+    owner = gatheredGhOwnerRepo.owner;
+    repo = gatheredGhOwnerRepo.repo;
+  }
+  console.log(`Owner: ${owner}, Repo: ${repo}`);
   try {
     const issue = await octokit.rest.issues.get({
       owner,
@@ -145,7 +180,10 @@ async function getIssueById(
       issue_number,
     });
     stream.progress(`Issue "${issue.data.title}" loaded.`);
-
+    stream.markdown(`Issue: **${issue.data.title}**\n\n`);
+    stream.markdown(issue.data.body?.replaceAll("\n", "\n> ") + "");
+    stream.markdown("\n\n----\n\n");
+    stream.progress(`My suggestion....`);
     return issue.data;
   } catch (err) {
     console.error(err);
@@ -154,12 +192,14 @@ async function getIssueById(
 
 async function GetIssueDataString(
   issueId: string,
-  stream: vscode.ChatResponseStream
+  stream: vscode.ChatResponseStream,
+  ghOwner: string = "",
+  ghRepo: string = ""
 ) {
   let issueNumber = Number(issueId);
   if (isNaN(issueNumber))
     console.log(`The provided issue number is not a number: ${issueId}`);
-  const issue = await getIssueById(issueNumber, stream);
-  let result = `The issue to work on has the title: "${issue?.title}" and the description: ${issue?.body_text}. Use that information to give better answer for the following user query.`;
+  const issue = await getIssueById(issueNumber, stream, ghOwner, ghRepo);
+  let result = `The issue to work on has the title: "${issue?.title}" and the description: ${issue?.body}. Use that information to give better answer for the following user query.`;
   return result;
 }
