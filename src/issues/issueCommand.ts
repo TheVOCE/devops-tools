@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { getGitHubOwnerAndRepo } from "../gitHub.js";
 import { renderPrompt } from "@vscode/prompt-tsx";
-import { IssuesPrompt } from "./IssuePrompt.js";
+import { IssuesPrompt, type GitHubResult } from "./IssuePrompt.js";
+import type { Comment } from "./comment.js";
 
 const issueNumberRegex = /!(\d+)(\+?)/; // prefix: !, issue number, optional: + for comments
 const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and repo name
@@ -21,39 +22,42 @@ export async function handleIssueCommand(
   if (ghRepo) stream.progress(`GH Repo ${ghRepo} idetified.`);
   if (ghOwner) stream.progress(`GH owner ${ghOwner} idetified.`);
 
-  const ghResult = await getIssueAndCommentsById(
+  const ghResult = (await getIssueAndCommentsById(
     Number(issueId),
     stream,
     ghOwner,
     ghRepo,
     commentsUsage === "+"
-  );
+  )) as GitHubResult;
   StateIssueInStream(stream, ghResult?.issue, ghResult?.comments ?? []);
 
   if (model) {
-    const messages = [
-      vscode.LanguageModelChatMessage.User(
-        "You are a software product owner and you help your developers providing additional information for working on current software development task."
-      ),
-      vscode.LanguageModelChatMessage.User(
-        `The issue to work on has the title: "${ghResult?.issue?.title}" and the description: ${ghResult?.issue?.body}. Use that information to give better answer for the following user query.` +
-          (ghResult?.comments && ghResult?.comments?.length > 0
-            ? `Do also regard the comments: ${
-                ghResult?.comments
-                  ?.map((comment) => comment.body)
-                  .join("\n\n") + ""
-              }`
-            : "")
-      ),
-      vscode.LanguageModelChatMessage.User(request.prompt),
-    ];
+    // const messages = [
+    //   vscode.LanguageModelChatMessage.User(
+    //     "You are a software product owner and you help your developers providing additional information for working on current software development task."
+    //   ),
+    //   vscode.LanguageModelChatMessage.User(
+    //     `The issue to work on has the title: "${ghResult?.issue?.title}" and the description: ${ghResult?.issue?.body}. Use that information to give better answer for the following user query.` +
+    //       (ghResult?.comments && ghResult?.comments?.length > 0
+    //         ? `Do also regard the comments: ${
+    //             ghResult?.comments
+    //               ?.map((comment) => comment.body)
+    //               .join("\n\n") + ""
+    //           }`
+    //         : "")
+    //   ),
+    //   vscode.LanguageModelChatMessage.User(request.prompt),
+    // ];
     //TODO: uncomment this when that format of the prompt can be used (currently only class, no functional component??)
-    // const { messages } = await renderPrompt(
-    //   IssuesPrompt,
-    //   { ghResult, userPrompt: request.prompt },
-    //   { modelMaxPromptTokens: model.maxInputTokens },
-    //   model
-    // );
+    const { messages } = await renderPrompt(
+      IssuesPrompt,
+      {
+        ghResult: ghResult,
+        userPrompt: request.prompt,
+      },
+      { modelMaxPromptTokens: model.maxInputTokens },
+      model
+    );
 
     const chatResponse = await model.sendRequest(messages, {}, token);
     for await (const fragment of chatResponse.text) {

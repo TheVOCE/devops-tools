@@ -78,7 +78,7 @@
     "devDependencies": {
         "@octokit/rest": "^21.0.1",
         "@types/node": "^20.14.11",
-        "@vscode/prompt-tsx": "^0.1.14-alpha",
+        "@vscode/prompt-tsx": "^0.2.5-alpha",
         "eslint": "^9.7.0",
         "run-script-os": "^1.1.6",
         "simple-git": "^3.25.0",
