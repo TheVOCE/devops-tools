@@ -15,6 +15,8 @@ E.g.
 
 > /issue provide a implementation suggestion for solving **!1234+** in C#
 
+Using `gh:<owner>/<repo>` you can specify the organization and repo you like to refer to, in case it's not the owner and repo of you current code context.
+
 ## Running the extension
 
 - Run `npm install` in terminal to install dependencies

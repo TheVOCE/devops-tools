@@ -19,8 +19,8 @@ export async function handleIssueCommand(
   stream.progress(`Issue ${issueId} idetified.`);
   const ghMatch = request.prompt.match(ghRepoRegex);
   const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
-  if (ghRepo) stream.progress(`GH Repo ${ghRepo} idetified.`);
-  if (ghOwner) stream.progress(`GH owner ${ghOwner} idetified.`);
+  if (ghRepo) stream.progress(`GH Repo ${ghRepo} identified.`);
+  if (ghOwner) stream.progress(`GH owner ${ghOwner} identified.`);
 
   const ghResult = (await getIssueAndCommentsById(
     Number(issueId),
