@@ -1,16 +1,27 @@
-# Chat Example
+# Copilot with Issues
 
-This sample shows
+This an Visual Studio Code Extension enriching copilot with the option to reference GitHub issues.
 
-- How to contribute a chat participant.
-- How to use the chatRequestAccess API to request access to the chat.
-- How to respond with follow-ups.
+## Usage
 
-![demo](./demo.png)
+For referencing a GitHub Issue use the the `/issue` command and prepend an exclamationmark followed by the issue nummeber in your prompt: `!<issueNumber>`
 
-## Running the Sample
+E.g.
+
+> /issue provide a implementation suggestion for solving **!1234** in C#
+
+When appending a `+` to the issue reference beside the issue description also all issue comments will be passed to copilot: `!<issueNumber>+`
+E.g.
+
+> /issue provide a implementation suggestion for solving **!1234+** in C#
+
+## Running the extension
 
 - Run `npm install` in terminal to install dependencies
 - Run the `Run Extension` target in the Debug View. This will:
-	- Start a task `npm: watch` to compile the code
-	- Run the extension in a new VS Code window
+  - Start a task `npm: watch` to compile the code
+  - Run the extension in a new VS Code window
+
+### Inspiration
+
+This Extension is based on the chat sample of [vscode extension guides](https://github.com/microsoft/vscode-extension-samples/tree/main/chat-sample)

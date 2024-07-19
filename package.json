@@ -1,8 +1,8 @@
 {
-    "name": "chat-sample",
+    "name": "copilot-with-issues",
     "publisher": "vscode-samples",
-    "displayName": "Xebia GH Issues Chat Sample",
-    "description": "Sample chat extension, a trusty cat tutor that will can teach you computer science topics.",
+    "displayName": "Copilot with Issues",
+    "description": "Copilot extension supporting referencing of GitHub issues and pullrequests",
     "repository": {
         "type": "git",
         "url": "https://github.com/Microsoft/vscode-extension-samples"
@@ -42,9 +42,9 @@
         "chatParticipants": [
             {
                 "id": "xebia.copilot.issue-data-provider",
-                "fullName": "Xebia - copilot Github Issue Data provider",
-                "name": "Xebia-GID",
-                "description": "Copilot extension helping to get data from GitHub issues",
+                "fullName": "Copilot With Issues",
+                "name": "issues",
+                "description": "Copilot extension supporting referencing of GitHub issues and pullrequests",
                 "isSticky": true,
                 "commands": [
                     {
@@ -60,8 +60,8 @@
         ],
         "commands": [
             {
-                "command": "Xebia-GID.namesInEditor",
-                "title": "Github Issue Data"
+                "command": "CWI.namesInEditor",
+                "title": "Copilot With Issues"
             }
         ]
     },
@@ -76,13 +76,13 @@
         "setupTiktoken:windows": "copy node_modules\\@vscode\\prompt-tsx\\dist\\base\\tokenizer\\cl100k_base.tiktoken out\\"
     },
     "devDependencies": {
-        "@octokit/rest": "^20.1.1",
-        "@types/node": "^20.14.1",
-        "@vscode/prompt-tsx": "^0.1.12-alpha",
-        "eslint": "^9.4.0",
+        "@octokit/rest": "^21.0.1",
+        "@types/node": "^20.14.11",
+        "@vscode/prompt-tsx": "^0.1.14-alpha",
+        "eslint": "^9.7.0",
         "run-script-os": "^1.1.6",
-        "simple-git": "^3.24.0",
+        "simple-git": "^3.25.0",
         "tslint": "^6.1.3",
-        "typescript": "^5.4.5"
+        "typescript": "^5.5.3"
     }
 }
