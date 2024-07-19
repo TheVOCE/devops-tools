@@ -32,23 +32,6 @@ export async function handleIssueCommand(
   StateIssueInStream(stream, ghResult?.issue, ghResult?.comments ?? []);
 
   if (model) {
-    // const messages = [
-    //   vscode.LanguageModelChatMessage.User(
-    //     "You are a software product owner and you help your developers providing additional information for working on current software development task."
-    //   ),
-    //   vscode.LanguageModelChatMessage.User(
-    //     `The issue to work on has the title: "${ghResult?.issue?.title}" and the description: ${ghResult?.issue?.body}. Use that information to give better answer for the following user query.` +
-    //       (ghResult?.comments && ghResult?.comments?.length > 0
-    //         ? `Do also regard the comments: ${
-    //             ghResult?.comments
-    //               ?.map((comment) => comment.body)
-    //               .join("\n\n") + ""
-    //           }`
-    //         : "")
-    //   ),
-    //   vscode.LanguageModelChatMessage.User(request.prompt),
-    // ];
-    //TODO: uncomment this when that format of the prompt can be used (currently only class, no functional component??)
     const { messages } = await renderPrompt(
       IssuesPrompt,
       {
