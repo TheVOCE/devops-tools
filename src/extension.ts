@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { handleIssueCommand } from "./issueCommand.js";
+import { handleIssueCommand } from "./issues/issueCommand.js";
 
 const PARTICIPANT_ID = "xebia.copilot.issue-data-provider";
 const OPEN_URL_COMMAND = "Open_URL";

@@ -1,14 +1,10 @@
 import * as vscode from "vscode";
-import { getGitHubOwnerAndRepo } from "./gitHub.js";
+import { getGitHubOwnerAndRepo } from "../gitHub.js";
+import { renderPrompt } from "@vscode/prompt-tsx";
+import { IssuesPrompt } from "./IssuePrompt.js";
 
 const issueNumberRegex = /!(\d+)(\+?)/; // prefix: !, issue number, optional: + for comments
 const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and repo name
-
-interface Comment {
-  id: number;
-  url: string;
-  body?: string | undefined;
-}
 
 export async function handleIssueCommand(
   request: vscode.ChatRequest,
@@ -51,6 +47,13 @@ export async function handleIssueCommand(
       ),
       vscode.LanguageModelChatMessage.User(request.prompt),
     ];
+    //TODO: uncomment this when that format of the prompt can be used (currently only class, no functional component??)
+    // const { messages } = await renderPrompt(
+    //   IssuesPrompt,
+    //   { ghResult, userPrompt: request.prompt },
+    //   { modelMaxPromptTokens: model.maxInputTokens },
+    //   model
+    // );
 
     const chatResponse = await model.sendRequest(messages, {}, token);
     for await (const fragment of chatResponse.text) {
