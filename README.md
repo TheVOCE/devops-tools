@@ -1,4 +1,4 @@
-# Copilot with Issues
+# VOCE, a VscOde Copilot Extension
 
 This an Visual Studio Code Extension enriching copilot with the option to reference GitHub issues.
 
@@ -35,4 +35,5 @@ This Extension is based on the chat sample of [vscode extension guides](https://
 documented [here](https://code.visualstudio.com/api/extension-guides/chat)
 
 ### Authors
+
 This vs-code copilot extension is created and maintained by [Nico Orschel](https://github.com/norschel) and [Harald Binkle](https://github.com/harrybin)
