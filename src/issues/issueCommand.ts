@@ -3,16 +3,15 @@ import { getGitHubOwnerAndRepo } from "../gitHub.js";
 import { renderPrompt } from "@vscode/prompt-tsx";
 import { IssuesPrompt, type GitHubResult } from "./IssuePrompt.js";
 import type { Comment } from "./comment.js";
+import type { RequestHandlerContext } from "../requestHandlerContext.js";
 
 const issueNumberRegex = /!(\d+)(\+?)/; // prefix: !, issue number, optional: + for comments
 const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and repo name
 
-export async function handleIssueCommand(
-  request: vscode.ChatRequest,
-  stream: vscode.ChatResponseStream,
-  model: vscode.LanguageModelChat,
-  token: vscode.CancellationToken
+export async function handleGhIssueCommand(
+  requestHandlerContext: RequestHandlerContext
 ) {
+  const { request, stream, token, model } = requestHandlerContext;
   const match = request.prompt.match(issueNumberRegex);
   const [issueId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
 
@@ -29,6 +28,7 @@ export async function handleIssueCommand(
     ghRepo,
     commentsUsage === "+"
   )) as GitHubResult;
+  
   StateIssueInStream(stream, ghResult?.issue, ghResult?.comments ?? []);
 
   if (model) {
