@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { handleIssueCommand } from "./issues/issueCommand.js";
 
-const PARTICIPANT_ID = "xebia.copilot.issue-data-provider";
+const PARTICIPANT_ID = "nohb.voce";
 const OPEN_URL_COMMAND = "Open_URL";
 
 interface ICatChatResult extends vscode.ChatResult {

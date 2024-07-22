@@ -32,3 +32,7 @@ Using `gh:<owner>/<repo>` you can specify the organization and repo you like to 
 ## Inspiration
 
 This Extension is based on the chat sample of [vscode extension guides](https://github.com/microsoft/vscode-extension-samples/tree/main/chat-sample)
+documented [here](https://code.visualstudio.com/api/extension-guides/chat)
+
+### Authors
+This vs-code copilot extension is created and maintained by [Nico Orschel](https://github.com/norschel) and [Harald Binkle](https://github.com/harrybin)
