@@ -70,9 +70,16 @@ async function getIssueAndCommentsById(
     repo: "",
   };
   if (owner === "" && repo === "") {
-    owner = gatheredGhOwnerRepo.owner;
-    repo = gatheredGhOwnerRepo.repo;
+    if (gatheredGhOwnerRepo.owner === "" || gatheredGhOwnerRepo.repo === "") {
+      throw new Error(
+        "There is no git context. Please either open a file or folder of any GitHub git repository or specify the owner and repo in the prompt like `gh:<owner>/<repo>`."
+      );
+    } else {
+      owner = gatheredGhOwnerRepo.owner;
+      repo = gatheredGhOwnerRepo.repo;
+    }
   }
+
   console.log(`Owner: ${owner}, Repo: ${repo}`);
   try {
     const issue = (

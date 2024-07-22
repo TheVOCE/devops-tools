@@ -30,7 +30,13 @@ export async function getGitHubOwnerAndRepo(): Promise<
   );
 
   const gitRepo = git.gitP(workspacePath);
-  const remotes = await gitRepo.getRemotes(true);
+  const remotes: git.RemoteWithRefs[] = [];
+  try {
+    const remotes = await gitRepo.getRemotes(true);
+  } catch (err) {
+    console.error(err + "It looks like the there is no git context");
+    return;
+  }
 
   if (remotes.length === 0) {
     console.error("No remote repository found.");
