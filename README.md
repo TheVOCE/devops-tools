@@ -24,11 +24,6 @@ Using `gh:<owner>/<repo>` you can specify the organization and repo you like to 
   - Start a task `npm: watch` to compile the code
   - Run the extension in a new VS Code window
 
-### Known issues
-
-- if your VS-Code is not in the context of a git repo you will get the error:
-  > ❌ fatal: not a git repository (or any of the parent directories): .git
-
 ## Inspiration
 
 This Extension is based on the chat sample of [vscode extension guides](https://github.com/microsoft/vscode-extension-samples/tree/main/chat-sample)
