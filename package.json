@@ -2,7 +2,7 @@
     "name": "voce-vscode-copilot-extension",
     "publisher": "NOrschel&HarryBin",
     "displayName": "VOCE",
-    "description": "VOCE, a 'VscOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
+    "description": "VOCE, a 'Vs-cOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
     "repository": {
         "type": "git",
         "url": "https://github.com/Microsoft/vscode-extension-samples"
@@ -42,9 +42,9 @@
         "chatParticipants": [
             {
                 "id": "nohb.voce",
-                "fullName": "VOCE - VscOde Copilot Extension",
+                "fullName": "VOCE - Vs-cOde Copilot Extension",
                 "name": "issues",
-                "description": "VOCE, a 'VscOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
+                "description": "VOCE, a 'Vs-cOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
                 "isSticky": true,
                 "commands": [
                     {
@@ -61,7 +61,7 @@
         "commands": [
             {
                 "command": "VOCE.namesInEditor",
-                "title": "VOCE - VscOde Copilot Extension"
+                "title": "VOCE - Vs-cOde Copilot Extension"
             }
         ]
     },

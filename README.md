@@ -1,4 +1,4 @@
-# VOCE, a VscOde Copilot Extension
+# VOCE, a Vs-cOde Copilot Extension
 
 This an Visual Studio Code Extension enriching copilot with the option to reference GitHub issues.
 
