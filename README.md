@@ -1,3 +1,5 @@
+# moved to [THEvoce](https://github.com/TheVOCE/devops-tools)
+
 # VOCE-DevOps, a Vs-cOde Copilot Extension for DevOps
 
 This an Visual Studio Code Extension enriching copilot with data GitHub issues etc..
