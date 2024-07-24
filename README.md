@@ -1,6 +1,6 @@
-# VOCE, a Vs-cOde Copilot Extension
+# VOCE-DevOps, a Vs-cOde Copilot Extension for DevOps
 
-This an Visual Studio Code Extension enriching copilot with the option to reference GitHub issues.
+This an Visual Studio Code Extension enriching copilot with data GitHub issues etc..
 
 ## Usage
 
