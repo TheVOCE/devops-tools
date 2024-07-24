@@ -5,12 +5,22 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "watch",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
+			"script": "build",
+			"label": "[🚀 build]",
+			"problemMatcher": "$tsc",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "[👀 watch]",
+			"dependsOn": [
+				"npm: watch:tsc",
+				"npm: watch:esbuild"
+			],
 			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
+				"reveal": "never"
 			},
 			"group": {
 				"kind": "build",
@@ -19,22 +29,38 @@
 		},
 		{
 			"type": "npm",
-			"script": "watch-tests",
-			"problemMatcher": "$tsc-watch",
+			"script": "watch:esbuild",
+			"label": "[👀 watch:esbuild]",
+			"group": "build",
+			"problemMatcher": "$esbuild-watch",
 			"isBackground": true,
 			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
-			},
-			"group": "build"
+				"group": "watch",
+				"reveal": "never"
+			}
 		},
 		{
-			"label": "tasks: watch-tests",
-			"dependsOn": [
-				"npm: watch",
-				"npm: watch-tests"
-			],
-			"problemMatcher": []
-		}
+			"type": "npm",
+			"script": "watch:tsc",
+			"group": "build",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
+			"label": "[👀 npm: watch:tsc]",
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			}
+		},
+		{
+			"type": "npm",
+			"script": "package",
+			"label": "[🎁 package]",
+			"detail": "Builds the package for vsix distribution",
+			"problemMatcher": "$tsc",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
 	]
 }

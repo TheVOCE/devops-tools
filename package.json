@@ -1,11 +1,14 @@
 {
     "name": "voce-vscode-copilot-extension",
-    "publisher": "NOrschel&HarryBin",
+    "publisher": "Norschel-Harrybin",
     "displayName": "VOCE-DevOps",
     "description": "VOCE-DevOps, a 'Vs-cOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
     "repository": {
         "type": "git",
         "url": "https://github.com/TheVOCE/devops-tools"
+    },
+    "bugs": {
+        "url": "https://github.com/TheVOCE/devops-tools/issues"
     },
     "version": "0.1.0",
     "engines": {
@@ -65,20 +68,22 @@
             }
         ]
     },
-    "main": "./out/extension.js",
+    "main": "./dist/extension",
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall_no_longer_required": "npm run setupTiktoken",
-        "setupTiktoken": "run-script-os",
-        "setupTiktoken:linux:darwin": "cp node_modules/@vscode/prompt-tsx/dist/base/tokenizer/cl100k_base.tiktoken out/",
-        "setupTiktoken:windows": "copy node_modules\\@vscode\\prompt-tsx\\dist\\base\\tokenizer\\cl100k_base.tiktoken out\\"
+        "build": "npm run check-types && node esbuild.js",
+        "check-types": "tsc --noEmit",
+        "watch": "npm-run-all -p watch:*",
+        "watch:esbuild": "node esbuild.js --watch",
+        "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+        "vscode:prepublish": "npm run check-types && node esbuild.js --production",
+        "package": "npm run vscode:prepublish && vsce package"
     },
     "devDependencies": {
         "@octokit/rest": "^21.0.1",
         "@types/node": "^20.14.11",
         "@vscode/prompt-tsx": "^0.2.6-alpha",
+        "@vscode/vsce": "^2.31.1",
+        "esbuild": "^0.23.0",
         "eslint": "^9.7.0",
         "run-script-os": "^1.1.6",
         "simple-git": "^3.25.0",
