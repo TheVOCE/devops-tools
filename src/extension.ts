@@ -3,7 +3,7 @@ import { handleGhIssueCommand } from "./issues/issueCommand.js";
 import { addCommand } from "./addCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 
-const PARTICIPANT_ID = "nohb.voce";
+const PARTICIPANT_ID = "voce.devops";
 const OPEN_URL_COMMAND = "Open_URL";
 
 const MODEL_SELECTOR: vscode.LanguageModelChatSelector = {
@@ -59,7 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
   // when you type `@`, and can contribute sub-commands in the chat input
   // that appear when you type `/`.
   const chat = vscode.chat.createChatParticipant(PARTICIPANT_ID, handler);
-  chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "XebiaLogo.jpeg");
+  chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "logo.jpeg");
   vscode.commands.registerCommand(OPEN_URL_COMMAND, async (url: string) => {
     vscode.env.openExternal(vscode.Uri.parse(url));
   });
