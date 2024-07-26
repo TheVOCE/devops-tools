@@ -15,20 +15,25 @@ export async function handleGhIssueCommand(
   const match = request.prompt.match(issueNumberRegex);
   const [issueId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
 
-  stream.progress(`Issue ${issueId} idetified.`);
+  stream.progress(`Issue ${issueId} identified.`);
   const ghMatch = request.prompt.match(ghRepoRegex);
   const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
-  if (ghRepo) {stream.progress(`GH Repo ${ghRepo} identified.`);}
-  if (ghOwner) {stream.progress(`GH owner ${ghOwner} identified.`);}
+
+  if (ghOwner) {
+    stream.progress(`using GH owner ${ghOwner} passed in prompt`);
+  }
+  if (ghRepo) {
+    stream.progress(`using GH Repo ${ghRepo} passed in prompt`);
+  }
 
   const ghResult = (await getIssueAndCommentsById(
+    requestHandlerContext,
     Number(issueId),
-    stream,
     ghOwner,
     ghRepo,
     commentsUsage === "+"
   )) as GitHubResult;
-  
+
   StateIssueInStream(stream, ghResult?.issue, ghResult?.comments ?? []);
 
   if (model) {
@@ -52,8 +57,8 @@ export async function handleGhIssueCommand(
 
 //get issue object from github by its issue id using octokit
 async function getIssueAndCommentsById(
+  requestHandlerContext: RequestHandlerContext,
   issue_number: number,
-  stream: vscode.ChatResponseStream,
   ghOwner: string = "",
   ghRepo: string = "",
   withComments = false
@@ -65,18 +70,41 @@ async function getIssueAndCommentsById(
   const octokit = new Octokit({ auth: session.accessToken });
   let owner = ghOwner;
   let repo = ghRepo;
-  const gatheredGhOwnerRepo = (await getGitHubOwnerAndRepo()) ?? {
-    owner: "",
-    repo: "",
-  };
-  if (owner === "" && repo === "") {
-    if (gatheredGhOwnerRepo.owner === "" || gatheredGhOwnerRepo.repo === "") {
+
+  if (owner !== "" && repo !== "") {
+    //save context variables from prompt to the vscode ExtensionContext
+    requestHandlerContext.vscodeContext.globalState.update("ghOwner", owner);
+    requestHandlerContext.vscodeContext.globalState.update("ghRepo", repo);
+  } else {
+    // gather owner and repo from the git context of the current open file in editor
+    const gatheredGhOwnerRepo = (await getGitHubOwnerAndRepo()) ?? {
+      owner: "",
+      repo: "",
+    };
+
+    if (gatheredGhOwnerRepo.owner !== "" && gatheredGhOwnerRepo.repo !== "") {
+      owner = gatheredGhOwnerRepo.owner;
+      repo = gatheredGhOwnerRepo.repo;
+      requestHandlerContext.stream.progress(
+        `using git context from current file: github://${owner}/${repo}`
+      );
+    }
+  }
+
+  if (owner === "" || repo === "") {
+    //load variables from the vscode ExtensionContext
+    //this occurs when the user has not specified the owner and repo in the prompt and no git context is found
+    owner = requestHandlerContext.vscodeContext.globalState.get("ghOwner", "");
+    repo = requestHandlerContext.vscodeContext.globalState.get("ghRepo", "");
+
+    if (owner === "" || repo === "") {
       throw new Error(
         "There is no git context. Please either open a file or folder of any GitHub git repository or specify the owner and repo in the prompt like `gh:<owner>/<repo>`."
       );
     } else {
-      owner = gatheredGhOwnerRepo.owner;
-      repo = gatheredGhOwnerRepo.repo;
+      requestHandlerContext.stream.progress(
+        `using remembered git context: github://${owner}/${repo}`
+      );
     }
   }
 
@@ -90,14 +118,15 @@ async function getIssueAndCommentsById(
       })
     ).data;
     let comments: Comment[] = [];
-    if (withComments)
-      {comments = (
+    if (withComments) {
+      comments = (
         await octokit.rest.issues.listComments({
           owner,
           repo,
           issue_number,
         })
-      ).data as Comment[];}
+      ).data as Comment[];
+    }
 
     return { issue: issue, comments: comments };
   } catch (err) {

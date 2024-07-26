@@ -11,7 +11,7 @@ export async function addCommand<T>(
   commandHandlerFunc: CommandHandlerFunc<T>,
   requestHandlerContext: RequestHandlerContext
 ) {
-  const { request, context, stream, token } = requestHandlerContext;
+  const { request, context, stream, token } = requestHandlerContext;  
   if (request.command === commandstr) {
     try {
       await commandHandlerFunc(requestHandlerContext);

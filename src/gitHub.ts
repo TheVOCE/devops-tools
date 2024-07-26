@@ -1,55 +1,44 @@
 import * as vscode from "vscode";
-import * as cp from "child_process";
 import * as path from "path";
-import * as git from "simple-git";
+import simpleGit from "simple-git";
 
-export async function getGitHubOwnerAndRepo(): Promise<
-  { owner: string; repo: string } | undefined
-> {
+export async function getGitHubOwnerAndRepo() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    console.error("No file is open.");
+    console.error("No active editor found.");
     return;
   }
 
-  let filePath = editor.document.uri.fsPath;
-  let fileDirectory = path.dirname(filePath);
-  let workspacePath = fileDirectory;
+  const filePath = editor.document.uri.fsPath;
+  const fileDirectory = path.dirname(filePath);
 
-  await cp.exec(
-    "git rev-parse --show-toplevel",
-    { cwd: fileDirectory },
-    (error, stdout) => {
-      if (error) {
-        console.log(`No Git repository found in ${fileDirectory}`);
-      } else {
-        workspacePath = stdout.trim();
-        console.log(`Git repository found in ${workspacePath}`);
-      }
-    }
-  );
+  const git = simpleGit(fileDirectory);
 
-  const gitRepo = git.gitP(workspacePath);
-  const remotes: git.RemoteWithRefs[] = [];
   try {
-    const remotes = await gitRepo.getRemotes(true);
+    const isRepo = await git.checkIsRepo();
+    if (!isRepo) {
+      console.log(`No Git repository found in ${fileDirectory}`);
+      return;
+    }
+
+    const remotes = await git.getRemotes(true);
+    if (remotes.length === 0) {
+      console.error("No remote repository found.");
+      return;
+    }
+
+    const remoteUrl = remotes[0].refs.fetch;
+    const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
+    if (!match) {
+      console.error("Remote repository is not a GitHub repository.");
+      return;
+    }
+
+    console.log(`Remote URL: ${remoteUrl}`);
+
+    const [owner, repo] = match[1].split("/");
+    return { owner, repo };
   } catch (err) {
-    console.error(err + "It looks like the there is no git context");
-    return;
+    console.error(err + " It looks like there is no git context");
   }
-
-  if (remotes.length === 0) {
-    console.error("No remote repository found.");
-    return;
-  }
-
-  const remoteUrl = remotes[0].refs.fetch;
-  const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
-  if (!match) {
-    console.error("Remote repository is not a GitHub repository.");
-    return;
-  }
-
-  const [owner, repo] = match[1].split("/");
-  return { owner, repo };
 }

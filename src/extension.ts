@@ -19,7 +19,7 @@ interface ICatChatResult extends vscode.ChatResult {
   };
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(vscontext: vscode.ExtensionContext) {
   // Define a Cat chat handler.
   const handler: vscode.ChatRequestHandler = async (
     request: vscode.ChatRequest,
@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   ): Promise<ICatChatResult> => {
     const [model] = await vscode.lm.selectChatModels(MODEL_SELECTOR);
     const requestHandlerContext: RequestHandlerContext = {
+      vscodeContext: vscontext,
       request,
       context,
       stream,
@@ -59,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
   // when you type `@`, and can contribute sub-commands in the chat input
   // that appear when you type `/`.
   const chat = vscode.chat.createChatParticipant(PARTICIPANT_ID, handler);
-  chat.iconPath = vscode.Uri.joinPath(context.extensionUri, "logo.jpeg");
+  chat.iconPath = vscode.Uri.joinPath(vscontext.extensionUri, "logo.jpeg");
   vscode.commands.registerCommand(OPEN_URL_COMMAND, async (url: string) => {
     vscode.env.openExternal(vscode.Uri.parse(url));
   });
