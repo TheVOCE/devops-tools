@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import {
   AssistantMessage,
   BasePromptElementProps,
@@ -6,6 +7,16 @@ import {
   UserMessage,
 } from "@vscode/prompt-tsx";
 import type { Comment } from "./comment";
+import type { RequestHandlerContext } from "../requestHandlerContext";
+import {
+  getIssueAndCommentsById,
+  StateFullIssueInStream,
+  StateIssueTitleInStream,
+} from "./issueFunctions";
+import { OPEN_URL_COMMAND } from "../consts";
+
+const issueNumberRegex = /!(\d+)(\+?)/; // prefix: !, issue number, optional: + for comments
+const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and repo name
 
 export interface GitHubResult {
   comments: Comment[];
@@ -13,29 +24,68 @@ export interface GitHubResult {
 }
 
 export interface IssuesPromptProps extends BasePromptElementProps {
-  ghResult: GitHubResult;
+  requestHandlerContext: RequestHandlerContext;
   userPrompt: string;
 }
 
 export interface IssuesPromptState {
-  creationScript: string;
+  ghResult: GitHubResult;
 }
 
 export class IssuesPrompt extends PromptElement<
   IssuesPromptProps,
   IssuesPromptState
 > {
-  // override async prepare() {
-  //   const sqlExtensionApi = await vscode.extensions
-  //     .getExtension("ms-mssql.mssql")
-  //     ?.activate();
-  //   return {
-  //     creationScript: await sqlExtensionApi.getDatabaseCreateScript?.(),
-  //   };
-  // }
+  override async prepare() {
+    const { requestHandlerContext } = this.props;
+    const { request, stream } = requestHandlerContext;
+    const match = request.prompt.match(issueNumberRegex);
+    const [issueId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
+
+    stream.progress(`Issue #${issueId} found in prompt.`);
+    const ghMatch = request.prompt.match(ghRepoRegex);
+    const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
+
+    if (ghOwner) {
+      stream.progress(`using github owner '${ghOwner}' passed in prompt`);
+    }
+    if (ghRepo) {
+      stream.progress(`using github repo '${ghRepo}' passed in prompt`);
+    }
+
+    const ghResult = (await getIssueAndCommentsById(
+      requestHandlerContext,
+      Number(issueId),
+      ghOwner,
+      ghRepo,
+      commentsUsage === "+"
+    )) as GitHubResult;
+
+    stream.progress(`Issue "${ghResult?.issue?.title}" loaded.`);
+
+    // Access vscode settings
+    const config = vscode.workspace.getConfiguration("voce");
+    const echoFullIssue = config.get("echoFullIssue", false) as boolean;
+    const echoIssueComments = config.get("echoIssueComments", false) as boolean;
+    if (echoFullIssue) {
+      StateFullIssueInStream(
+        stream,
+        ghResult?.issue,
+        echoIssueComments ? ghResult?.comments ?? [] : []
+      );
+    } else stream.markdown(`Issue: **${ghResult?.issue?.title}**\n\n`);
+
+    stream.button({
+      command: OPEN_URL_COMMAND,
+      title: vscode.l10n.t("Open Issue in Browser"),
+      arguments: [ghResult?.issue?.html_url],
+    });
+    return { ghResult };
+  }
 
   render(state: IssuesPromptState, sizing: PromptSizing) {
-    const { ghResult, userPrompt } = this.props;
+    const { userPrompt } = this.props;
+    const { ghResult } = state;
     return (
       <>
         <AssistantMessage priority={300}>

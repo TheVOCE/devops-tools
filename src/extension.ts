@@ -2,9 +2,9 @@ import * as vscode from "vscode";
 import { handleGhIssueCommand } from "./issues/issueCommand.js";
 import { addCommand } from "./addCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
+import { OPEN_URL_COMMAND } from "./consts.js";
 
 const PARTICIPANT_ID = "voce.devops";
-const OPEN_URL_COMMAND = "Open_URL";
 
 const MODEL_SELECTOR: vscode.LanguageModelChatSelector = {
   vendor: "copilot",
@@ -43,11 +43,6 @@ export function activate(vscontext: vscode.ExtensionContext) {
       "issue",
       async (requestHandlerContext) => {
         const ghResult = await handleGhIssueCommand(requestHandlerContext);
-        stream.button({
-          command: OPEN_URL_COMMAND,
-          title: vscode.l10n.t("Open Issue in Browser"),
-          arguments: [ghResult?.issue?.html_url],
-        });
       },
       requestHandlerContext
     );

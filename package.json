@@ -10,7 +10,7 @@
     "bugs": {
         "url": "https://github.com/TheVOCE/devops-tools/issues"
     },
-    "version": "0.1.1",
+    "version": "0.1.2",
     "engines": {
         "vscode": "^1.90.0"
     },
@@ -42,6 +42,22 @@
         }
     ],
     "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "VOCE Extension Configuration",
+            "properties": {
+                "voce.echoFullIssue": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "echo the full issue title and description in the chat."
+                },
+                "voce.echoIssueComments": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "echo the comments of issue chat (only if echoFullIssue is also set)."
+                }
+            }
+        },
         "chatParticipants": [
             {
                 "id": "voce.devops",
