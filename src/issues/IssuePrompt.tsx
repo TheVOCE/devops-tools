@@ -11,7 +11,6 @@ import type { RequestHandlerContext } from "../requestHandlerContext";
 import {
   getIssueAndCommentsById,
   StateFullIssueInStream,
-  StateIssueTitleInStream,
 } from "./issueFunctions";
 import { OPEN_URL_COMMAND } from "../consts";
 
