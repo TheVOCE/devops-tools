@@ -2,8 +2,6 @@ import * as vscode from "vscode";
 import { handleGhIssueCommand } from "./issues/issueCommand";
 import type { RequestHandlerContext } from "./requestHandlerContext";
 
-
-
 export type CommandHandlerFunc<T> = (
   requestHandlerContext: RequestHandlerContext
 ) => Promise<T>;
@@ -14,8 +12,8 @@ export async function addCommand<T>(
   requestHandlerContext: RequestHandlerContext
 ) {
   const { request, context, stream, token } = requestHandlerContext;
-  if (request.command == commandstr) {
-    try {      
+  if (request.command === commandstr) {
+    try {
       await commandHandlerFunc(requestHandlerContext);
     } catch (err) {
       handleError(err, stream);

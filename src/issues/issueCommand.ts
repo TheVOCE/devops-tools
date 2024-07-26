@@ -18,8 +18,8 @@ export async function handleGhIssueCommand(
   stream.progress(`Issue ${issueId} idetified.`);
   const ghMatch = request.prompt.match(ghRepoRegex);
   const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
-  if (ghRepo) stream.progress(`GH Repo ${ghRepo} identified.`);
-  if (ghOwner) stream.progress(`GH owner ${ghOwner} identified.`);
+  if (ghRepo) {stream.progress(`GH Repo ${ghRepo} identified.`);}
+  if (ghOwner) {stream.progress(`GH owner ${ghOwner} identified.`);}
 
   const ghResult = (await getIssueAndCommentsById(
     Number(issueId),
@@ -91,13 +91,13 @@ async function getIssueAndCommentsById(
     ).data;
     let comments: Comment[] = [];
     if (withComments)
-      comments = (
+      {comments = (
         await octokit.rest.issues.listComments({
           owner,
           repo,
           issue_number,
         })
-      ).data as Comment[];
+      ).data as Comment[];}
 
     return { issue: issue, comments: comments };
   } catch (err) {
