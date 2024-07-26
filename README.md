@@ -19,6 +19,12 @@ E.g.
 
 Using `gh:<owner>/<repo>` you can specify the organization and repo you like to refer to, in case it's not the owner and repo of you current code context.
 
+So a full example call may look like this:
+
+```
+@voce /issue gh:harrybin/vscode-copilot-extension provide a solution for !3+ in c#
+```
+
 ## Running the extension
 
 - Run `npm install` in terminal to install dependencies
