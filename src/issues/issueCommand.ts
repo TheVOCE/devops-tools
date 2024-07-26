@@ -15,15 +15,15 @@ export async function handleGhIssueCommand(
   const match = request.prompt.match(issueNumberRegex);
   const [issueId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
 
-  stream.progress(`Issue ${issueId} identified.`);
+  stream.progress(`Issue #${issueId} found in prompt.`);
   const ghMatch = request.prompt.match(ghRepoRegex);
   const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
 
   if (ghOwner) {
-    stream.progress(`using GH owner ${ghOwner} passed in prompt`);
+    stream.progress(`using github owner '${ghOwner}' passed in prompt`);
   }
   if (ghRepo) {
-    stream.progress(`using GH Repo ${ghRepo} passed in prompt`);
+    stream.progress(`using github repo '${ghRepo}' passed in prompt`);
   }
 
   const ghResult = (await getIssueAndCommentsById(
@@ -109,14 +109,19 @@ async function getIssueAndCommentsById(
   }
 
   console.log(`Owner: ${owner}, Repo: ${repo}`);
+  let issue: any = {};
   try {
-    const issue = (
+    issue = (
       await octokit.rest.issues.get({
         owner,
         repo,
         issue_number,
       })
     ).data;
+  } catch (err) {
+    throw new Error(`Can't find issue #${issue_number} in repo '${repo}'.`);
+  }
+  try {
     let comments: Comment[] = [];
     if (withComments) {
       comments = (
@@ -130,7 +135,9 @@ async function getIssueAndCommentsById(
 
     return { issue: issue, comments: comments };
   } catch (err) {
-    console.error(err);
+    throw new Error(
+      `Can't get comments for issue #${issue_number} of repo '${repo}'.`
+    );
   }
 }
 

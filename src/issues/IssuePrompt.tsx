@@ -5,7 +5,6 @@ import {
   PromptSizing,
   UserMessage,
 } from "@vscode/prompt-tsx";
-import * as vscode from "vscode";
 import type { Comment } from "./comment";
 
 export interface GitHubResult {

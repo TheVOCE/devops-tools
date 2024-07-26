@@ -10,7 +10,7 @@
     "bugs": {
         "url": "https://github.com/TheVOCE/devops-tools/issues"
     },
-    "version": "0.1.0",
+    "version": "0.1.1",
     "engines": {
         "vscode": "^1.90.0"
     },
@@ -75,7 +75,8 @@
         "watch": "npm-run-all -p watch:*",
         "watch:esbuild": "node esbuild.js --watch",
         "watch:tsc": "tsc -watch -p ./",
-        "package": "npm run vscode:prepublish && vsce package",
+        "package": "npm run vscode:prepublish && vsce package && npm run move-packages-installer-dir",
+        "move-packages-installer-dir": "move *.vsix ./installer/",
         "check-types": "tsc --noEmit",
         "lint": "eslint src --ext .ts,.tsx"
     },
