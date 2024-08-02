@@ -3,6 +3,11 @@ import { handleGhIssueCommand } from "./issues/issueCommand.js";
 import { addCommand } from "./addCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
+// import {
+//   ChatVariableLevel,
+//   type ChatVariableValue,
+//   type ProviderResult,
+// } from "vscode";
 
 const PARTICIPANT_ID = "voce.devops";
 
@@ -59,6 +64,26 @@ export function activate(vscontext: vscode.ExtensionContext) {
   vscode.commands.registerCommand(OPEN_URL_COMMAND, async (url: string) => {
     vscode.env.openExternal(vscode.Uri.parse(url));
   });
+
+  // this does not yet work as expected, see: https://github.com/microsoft/vscode/issues/206299  , so we remove it for now
+  // type from "https://github.com/microsoft/vscode/blob/main/src/vscode-dts/vscode.proposed.chatVariableResolver.d.ts" in vscode.proposed.chatVariableResolver.d.ts
+  // vscode.chat.registerChatVariableResolver(
+  //   "issues",
+  //   "ghissue",
+  //   "GihHub issue",
+  //   "GitHub issue selection",
+  //   false,
+  //   {
+  //     resolve: async (
+  //       name: string,
+  //       context: vscode.ChatVariableContext,
+  //       token: vscode.CancellationToken
+  //     ): Promise<vscode.ChatVariableValue[]> => {
+  //       // here we may show a  UI where the user can pick an issue
+  //       return [{ level: ChatVariableLevel.Medium, value: "ghissue#1" }];
+  //     },
+  //   }
+  // );
 }
 
 export function deactivate() {}
