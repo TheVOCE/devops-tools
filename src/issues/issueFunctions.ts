@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import type { Comment } from "./comment";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { getGitHubOwnerAndRepo } from "../gitHub";
+import type { GitHubResult } from "./IssuePrompt";
 
 export function StateFullIssueInStream(
   stream: vscode.ChatResponseStream,
@@ -26,7 +27,7 @@ export async function getIssueAndCommentsById(
   ghOwner: string = "",
   ghRepo: string = "",
   withComments = false
-) {
+): Promise<GitHubResult> {
   const session = await vscode.authentication.getSession("github", ["repo"], {
     createIfNone: true,
   });

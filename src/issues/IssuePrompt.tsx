@@ -19,7 +19,13 @@ const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and 
 
 export interface GitHubResult {
   comments: Comment[];
-  issue?: { title: string; body: string; html_url: string };
+  issue?: {
+    title: string;
+    body: string;
+    html_url: string;
+    state: string;
+    reason: string;
+  };
 }
 
 export interface IssuesPromptProps extends BasePromptElementProps {
@@ -72,13 +78,18 @@ export class IssuesPrompt extends PromptElement<
         ghResult?.issue,
         echoIssueComments ? ghResult?.comments ?? [] : []
       );
-    } else stream.markdown(`Issue: **${ghResult?.issue?.title}**\n\n`);
+    } else {
+      stream.markdown(
+        `🟣Issue [_${ghResult.issue?.state}_]: **${ghResult.issue?.title}**\n\n`
+      );
+    }
 
     stream.button({
       command: OPEN_URL_COMMAND,
       title: vscode.l10n.t("Open Issue in Browser"),
       arguments: [ghResult?.issue?.html_url],
     });
+    stream.markdown(`---\n\n`);
     return { ghResult };
   }
 

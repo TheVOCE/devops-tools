@@ -13,10 +13,11 @@ const PARTICIPANT_ID = "voce.devops";
 
 const MODEL_SELECTOR: vscode.LanguageModelChatSelector = {
   vendor: "copilot",
-  family: "gpt-4",
+  family: "gpt-4o",
 };
 //family: "gpt-3.5-turbo",
 //family: "gpt-4",
+//family: "gpt-4o",
 
 interface ICatChatResult extends vscode.ChatResult {
   metadata: {
