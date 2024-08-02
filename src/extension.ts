@@ -3,6 +3,7 @@ import { handleGhIssueCommand } from "./issues/issueCommand.js";
 import { addCommand } from "./addCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
+import { handleGhPullrequestCommand } from "./pullrequests/pullrequestCommand.js";
 // import {
 //   ChatVariableLevel,
 //   type ChatVariableValue,
@@ -45,6 +46,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
     // To talk to an LLM in your subcommand handler implementation, your
     // extension can use VS Code's `requestChatAccess` API to access the Copilot API.
     // The GitHub Copilot Chat extension implements this provider.
+
     await addCommand(
       "issue",
       async (requestHandlerContext) => {
@@ -52,7 +54,13 @@ export function activate(vscontext: vscode.ExtensionContext) {
       },
       requestHandlerContext
     );
-    //else if (request.command == "pullrequest") {
+     await addCommand(
+      "pullrequest",
+      async (requestHandlerContext) => {
+        const ghResult = await handleGhPullrequestCommand(requestHandlerContext);
+      },
+      requestHandlerContext
+    );
 
     return { metadata: { command: "" } };
   };
