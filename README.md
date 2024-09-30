@@ -9,21 +9,20 @@ This an Visual Studio Code Extension enriching copilot with data GitHub issues e
 For referencing a GitHub Issue use the the `/issue` command and prepend an exclamationmark followed by the issue nummeber in your prompt: `!<issueNumber>`
 
 E.g.
-
-> /issue provide a implementation suggestion for solving **!1234** in C#
+> [!NOTE]
+> `/issue provide a implementation suggestion for solving **!1234** in C#`
 
 When appending a `+` to the issue reference beside the issue description also all issue comments will be passed to copilot: `!<issueNumber>+`
 E.g.
-
-> /issue provide a implementation suggestion for solving **!1234+** in C#
+> [!TIP]
+> `/issue provide a implementation suggestion for solving **!1234+** in C#`
 
 Using `gh:<owner>/<repo>` you can specify the organization and repo you like to refer to, in case it's not the owner and repo of you current code context.
 
 So a full example call may look like this:
 
-```
-@voce /issue gh:harrybin/vscode-copilot-extension provide a solution for !3+ in c#
-```
+> [!IMPORTANT]
+> `@voce /issue gh:harrybin/vscode-copilot-extension provide a solution for !3+ in c#`
 
 ## Running the extension
 
