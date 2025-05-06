@@ -1,6 +1,7 @@
 import { renderPrompt } from "@vscode/prompt-tsx";
 import { IssuesPrompt } from "./IssuePrompt.js";
 import type { RequestHandlerContext } from "../requestHandlerContext.js";
+import type { LanguageModelTextPart } from "vscode";
 
 export async function handleGhIssueCommand(
   requestHandlerContext: RequestHandlerContext
@@ -8,7 +9,7 @@ export async function handleGhIssueCommand(
   const { request, stream, token, model } = requestHandlerContext;
 
   if (model) {
-    const { messages } = await renderPrompt(
+    const { messages: rawMessages } = await renderPrompt(
       IssuesPrompt,
       {
         userPrompt: request.prompt,
@@ -18,6 +19,10 @@ export async function handleGhIssueCommand(
       model
     );
 
+    const messages = rawMessages.map(msg => ({
+      ...msg,
+      content: [{ value: msg.content } as LanguageModelTextPart]
+    }));
     const chatResponse = await model.sendRequest(messages, {}, token);
     stream.progress(`My suggestion....`);
     for await (const fragment of chatResponse.text) {
