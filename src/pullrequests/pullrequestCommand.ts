@@ -18,12 +18,8 @@ export async function handleGhPullrequestCommand(
       model
     );
 
-    const transformedMessages = messages.map(message => ({
-      ...message,
-      content: [{ value: message.content }], // Use the correct `value` property for LanguageModelTextPart
-    }));
-
-    const chatResponse = await model.sendRequest(transformedMessages, {}, token);
+    // Pass messages directly as they should already be in the correct format
+    const chatResponse = await model.sendRequest(messages, {}, token);
     stream.progress(`My suggestion....`);
     for await (const fragment of chatResponse.text) {
       stream.markdown(fragment);

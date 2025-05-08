@@ -19,11 +19,12 @@ export async function handleGhIssueCommand(
       model
     );
 
-    const messages = rawMessages.map(msg => ({
-      ...msg,
-      content: [{ value: msg.content } as LanguageModelTextPart]
-    }));
-    const chatResponse = await model.sendRequest(messages, {}, token);
+    // const messages = rawMessages.map(msg => ({
+    //   ...msg,
+    //   content: [{ value: msg.content } as LanguageModelTextPart]
+    // }));
+    // Pass rawMessages directly as they should already be in the correct format
+    const chatResponse = await model.sendRequest(rawMessages, {}, token);
     stream.progress(`My suggestion....`);
     for await (const fragment of chatResponse.text) {
       stream.markdown(fragment);

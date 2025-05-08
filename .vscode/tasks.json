@@ -5,49 +5,25 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "build",
+			"script": "compile",
 			"label": "[🚀 build]",
 			"problemMatcher": "$tsc",
-			"group": {
-				"kind": "build",
-			}
-		},
-		{
-			"label": "watch",
-			"dependsOn": [
-				"npm: watch:tsc",
-				"npm: watch:esbuild"
-			],
-			"presentation": {
-				"reveal": "never"
-			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			}
 		},
 		{
+			"label": "watch",
 			"type": "npm",
-			"script": "watch:esbuild",
-			"group": "build",
-			"problemMatcher": "$esbuild-watch",
-			"isBackground": true,
-			"label": "npm: watch:esbuild",
-			"presentation": {
-				"group": "watch",
-				"reveal": "never"
-			}
-		},
-		{
-			"type": "npm",
-			"script": "watch:tsc",
-			"group": "build",
+			"script": "watch",
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
-			"label": "npm: watch:tsc",
 			"presentation": {
-				"group": "watch",
 				"reveal": "never"
+			},
+			"group": {
+				"kind": "build"
 			}
 		},
 		{
