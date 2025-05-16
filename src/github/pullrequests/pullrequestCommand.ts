@@ -1,6 +1,6 @@
 import { renderPrompt } from "@vscode/prompt-tsx";
 import { PullrequestPrompt } from "./PullrequestPrompt.js";
-import type { RequestHandlerContext } from "../requestHandlerContext.js";
+import type { RequestHandlerContext } from "../../requestHandlerContext.js";
 
 export async function handleGhPullrequestCommand(
   requestHandlerContext: RequestHandlerContext

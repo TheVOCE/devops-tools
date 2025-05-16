@@ -1,6 +1,6 @@
 import { renderPrompt } from "@vscode/prompt-tsx";
 import { IssuesPrompt } from "./IssuePrompt.js";
-import type { RequestHandlerContext } from "../requestHandlerContext.js";
+import type { RequestHandlerContext } from "../../requestHandlerContext.js";
 import type { LanguageModelTextPart } from "vscode";
 
 export async function handleGhIssueCommand(

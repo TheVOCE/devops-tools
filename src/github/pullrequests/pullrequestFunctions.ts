@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { RequestHandlerContext } from "../requestHandlerContext";
+import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
   determineGhOwnerAndRepoToUse,
   type Comment,

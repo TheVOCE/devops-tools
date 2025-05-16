@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import { handleGhIssueCommand } from "./issues/issueCommand.js";
+import { handleGhIssueCommand } from "./github/issues/issueCommand.js";
 // import { addCommand } from "./addCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
-import { handleGhPullrequestCommand } from "./pullrequests/pullrequestCommand.js";
+import { handleGhPullrequestCommand } from "./github/pullrequests/pullrequestCommand.js";
 
 const PARTICIPANT_ID = "voce.devops";
 

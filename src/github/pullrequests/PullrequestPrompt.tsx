@@ -6,13 +6,13 @@ import {
   PromptSizing,
   UserMessage,
 } from "@vscode/prompt-tsx";
-import type { RequestHandlerContext } from "../requestHandlerContext";
-import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../consts";
+import type { RequestHandlerContext } from "../../requestHandlerContext";
+import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
   getPullrequestById,
   StateFullPrInStream,
 } from "./pullrequestFunctions";
-import { parseValuesFromPrompt } from "../utils";
+import { parseValuesFromPrompt } from "../../utils";
 import type { GitHubResult } from "../gitHub";
 
 export interface PullrequestPromptProps extends BasePromptElementProps {

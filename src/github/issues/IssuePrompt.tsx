@@ -6,14 +6,14 @@ import {
   PromptSizing,
   UserMessage,
 } from "@vscode/prompt-tsx";
-import type { RequestHandlerContext } from "../requestHandlerContext";
+import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
   getIssueAndCommentsById,
   StateFullIssueInStream,
 } from "./issueFunctions";
-import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../consts";
+import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import type { GitHubResult } from "../gitHub";
-import { parseValuesFromPrompt } from "../utils";
+import { parseValuesFromPrompt } from "../../utils";
 
 export interface IssuesPromptProps extends BasePromptElementProps {
   requestHandlerContext: RequestHandlerContext;
