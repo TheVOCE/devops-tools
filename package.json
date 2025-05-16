@@ -94,7 +94,7 @@
         "move-packages-installer-dir": "move *.vsix ./installer/"
     },
     "dependencies": {
-        "@vscode/prompt-tsx": "^0.3.0-alpha.12",
+        "@vscode/prompt-tsx": "^0.4.0-alpha.4",
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1"
     },
     "devDependencies": {
