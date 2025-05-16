@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
-import type { RequestHandlerContext } from "./requestHandlerContext";
+import type { RequestHandlerContext } from "../requestHandlerContext";
 
 export interface GitHubResult {
   comments: Comment[];
