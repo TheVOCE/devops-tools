@@ -98,7 +98,7 @@
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1"
     },
     "devDependencies": {
-        "@eslint/js": "^9.13.0",
+        "@eslint/js": "^9.27.0",
         "@stylistic/eslint-plugin": "^4.2.0",
         "@octokit/rest": "^21.1.1",
         "@types/node": "^22",
