@@ -103,7 +103,7 @@
         "@octokit/rest": "^21.1.1",
         "@types/node": "^22",
         "@types/vscode": "^1.100.0",
-        "@vscode/vsce": "^3.4.1",
+        "@vscode/vsce": "^3.4.2",
         "eslint": "^9.27.0",
         "simple-git": "^3.27.0",
         "typescript": "^5.8.2",
