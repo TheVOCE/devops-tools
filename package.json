@@ -99,12 +99,12 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.27.0",
-        "@stylistic/eslint-plugin": "^4.2.0",
-        "@octokit/rest": "^21.1.1",
+        "@stylistic/eslint-plugin": "^4.4.0",
+        "@octokit/rest": "^22.0.0",
         "@types/node": "^22",
         "@types/vscode": "^1.100.0",
-        "@vscode/vsce": "^3.4.1",
-        "eslint": "^9.27.0",
+        "@vscode/vsce": "^3.4.2",
+        "eslint": "^9.28.0",
         "simple-git": "^3.27.0",
         "typescript": "^5.8.2",
         "typescript-eslint": "^8.33.0"
