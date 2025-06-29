@@ -3,23 +3,6 @@ import * as path from "path";
 import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 
-export interface AzDevOpsResult {
-  comments: AzDevOpsComment[];
-  data?: {
-    title: string;
-    body: string;
-    url: string;
-    state: string;
-    reason: string;
-  };
-}
-
-export interface AzDevOpsComment {
-  id: number;
-  url: string;
-  body?: string | undefined;
-}
-
 export async function getAzDevOpsOrgAndProject() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {

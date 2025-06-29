@@ -2,7 +2,7 @@
     "name": "voce-vscode-copilot-extension",
     "publisher": "Norschel-Harrybin",
     "displayName": "VOCE-DevOps",
-    "description": "VOCE-DevOps, a 'Vs-cOde Copilot Extension' supporting referencing of GitHub issues and pullrequests",
+    "description": "VOCE-DevOps, a 'Vs-cOde Copilot Extension' supporting referencing of GitHub issues/PRs and Azure DevOps work items/PRs",
     "repository": {
         "type": "git",
         "url": "https://github.com/TheVOCE/devops-tools"
@@ -55,6 +55,16 @@
                     "type": "boolean",
                     "default": false,
                     "description": "echo the comments of issue chat (only if echoFullIssue is also set)."
+                },
+                "voce.echoFullWorkItem": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "echo the full work item title and description in the chat."
+                },
+                "voce.echoWorkItemComments": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "echo the comments of work item chat (only if echoFullWorkItem is also set)."
                 }
             }
         },
@@ -63,7 +73,7 @@
                 "id": "voce.devops",
                 "fullName": "VOCE-DevOps - Vs-cOde Copilot Extension",
                 "name": "voce",
-                "description": "VOCE-DevOps: `!<issue/workitemNumber>`, append `+` for including (issue) comments.",
+                "description": "VOCE-DevOps: GitHub `!<issueNumber>` or Azure DevOps `#<workItemNumber>`, append `+` for including comments.",
                 "isSticky": true,
                 "commands": [
                     {
@@ -76,7 +86,7 @@
                     },
                     {
                         "name": "azd-workitem",
-                        "description": "get data from Azure DevOps workitem using `!<workItemNumber>`"
+                        "description": "get data from Azure DevOps work item using `#<workItemNumber>`. Use `azdo:<org>/<project>` to add Azure DevOps context."
                     },
                     {
                         "name": "azd-pullrequest",

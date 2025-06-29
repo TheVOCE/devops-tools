@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { handleGhIssueCommand } from "./github/issues/GitHubIssueCommand.js";
+import { handleAzDoWorkItemCommand } from "./azd/workitems/AzDevOpsWorkItemCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
 import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequestCommand.js";
@@ -58,8 +59,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
       await handleGhPullrequestCommand(requestHandlerContext);
     }
     else if (request.command === "azd-workitem") {
-      // Handle Azure DevOps work item command
-      stream.markdown("Azure DevOps work item command is not yet implemented.");
+      await handleAzDoWorkItemCommand(requestHandlerContext);
     }
     else if (request.command === "azd-pullrequest") {
       // Handle Azure DevOps pull request command
