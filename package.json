@@ -63,16 +63,24 @@
                 "id": "voce.devops",
                 "fullName": "VOCE-DevOps - Vs-cOde Copilot Extension",
                 "name": "voce",
-                "description": "VOCE-DevOps: `!<issueNumber>`, append `+` for including issue comments. Use `gh:<owner>/<repo>` to add a github context.",
+                "description": "VOCE-DevOps: `!<issue/workitemNumber>`, append `+` for including (issue) comments.",
                 "isSticky": true,
                 "commands": [
                     {
-                        "name": "issue",
-                        "description": "get data from GitHub issue using `!<issueNumber>`"
+                        "name": "gh-issue",
+                        "description": "get data from GitHub issue using `!<issueNumber>`. Use `gh:<owner>/<repo>` to add a github context."
                     },
                     {
-                        "name": "pullrequest",
-                        "description": "get data from GitHub pullrequest"
+                        "name": "gh-pullrequest",
+                        "description": "get data from GitHub pullrequest. Use `gh:<owner>/<repo>` to add a github context."
+                    },
+                    {
+                        "name": "azd-workitem",
+                        "description": "get data from Azure DevOps workitem using `!<workItemNumber>`"
+                    },
+                    {
+                        "name": "gh-pullrequest",
+                        "description": "get data from Azure DevOps pullrequest"
                     }
                 ]
             }
@@ -91,17 +99,18 @@
         "lint": "eslint . --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "package": "npm run vscode:prepublish && vsce package && npm run move-packages-installer-dir",
-        "move-packages-installer-dir": "move *.vsix ./installer/"
+        "move-packages-installer-dir": "mkdir -p ./installer && mv *.vsix ./installer/ 2>/dev/null"
     },
     "dependencies": {
+        "@vscode/chat-extension-utils": "^0.0.0-alpha.1",
         "@vscode/prompt-tsx": "^0.3.0-alpha.12",
-        "@vscode/chat-extension-utils": "^0.0.0-alpha.1"
+        "azure-devops-node-api": "^15.1.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.13.0",
-        "@stylistic/eslint-plugin": "^2.9.0",
         "@octokit/rest": "^21.1.1",
-        "@types/node": "^20",
+        "@stylistic/eslint-plugin": "^2.9.0",
+        "@types/node": "^20.19.2",
         "@types/vscode": "^1.95.0",
         "@vscode/vsce": "^3.3.2",
         "eslint": "^9.13.0",

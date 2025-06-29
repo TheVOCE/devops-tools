@@ -73,14 +73,14 @@ export async function determineAzDoOrgAndProjectToUse(
   azdoProject: string,
   requestHandlerContext: RequestHandlerContext
 ) {
-  // Azure DevOps authentication via vscode extension API
-  // See https://code.visualstudio.com/api/extension-guides/authentication#using-the-authentication-api
-  // The Azure DevOps extension uses 'azure-devops' as the authentication provider id
-  const session = await vscode.authentication.getSession("azure-devops", ["vso.code"], {
-    createIfNone: true,
-  });
-  // Use @azure/devops-extension-api or REST API directly
-  // For simplicity, just return the session and org/project
+  // For now, we'll use personal access token authentication
+  // In a real implementation, you might want to use VS Code authentication API
+  // const session = await vscode.authentication.getSession("azure-devops", ["vso.code"], {
+  //   createIfNone: true,
+  // });
+  
+  // For Azure DevOps, we'll need to get a PAT token or use OAuth
+  // This is a placeholder for authentication
   let org = azdoOrg;
   let project = azdoProject;
 
@@ -116,5 +116,5 @@ export async function determineAzDoOrgAndProjectToUse(
   }
 
   console.log(`Org: ${org}, Project: ${project}`);
-  return { session, org, project };
+  return { org, project };
 }
