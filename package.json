@@ -79,7 +79,7 @@
                         "description": "get data from Azure DevOps workitem using `!<workItemNumber>`"
                     },
                     {
-                        "name": "gh-pullrequest",
+                        "name": "azd-pullrequest",
                         "description": "get data from Azure DevOps pullrequest"
                     }
                 ]

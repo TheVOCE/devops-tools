@@ -30,6 +30,7 @@ export async function getGitHubOwnerAndRepo() {
   const filePath = editor.document.uri.fsPath;
   const fileDirectory = path.dirname(filePath);
 
+  console.log("Get GitHub owner and repo name");
   const git = simpleGit(fileDirectory);
 
   try {
@@ -46,13 +47,13 @@ export async function getGitHubOwnerAndRepo() {
     }
 
     const remoteUrl = remotes[0].refs.fetch;
+    console.log(`Remote URL: ${remoteUrl}`);
+    
     const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
     if (!match) {
       console.error("Remote repository is not a GitHub repository.");
       return;
     }
-
-    console.log(`Remote URL: ${remoteUrl}`);
 
     const [owner, repo] = match[1].split("/");
     return { owner, repo };
