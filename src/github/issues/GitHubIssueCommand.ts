@@ -1,7 +1,6 @@
 import { renderPrompt } from "@vscode/prompt-tsx";
-import { IssuesPrompt } from "./IssuePrompt.js";
+import { GitHubIssuesPrompt } from "./GitHubIssuesPrompt.js";
 import type { RequestHandlerContext } from "../../requestHandlerContext.js";
-import type { LanguageModelTextPart } from "vscode";
 
 export async function handleGhIssueCommand(
   requestHandlerContext: RequestHandlerContext
@@ -10,7 +9,7 @@ export async function handleGhIssueCommand(
 
   if (model) {
     const { messages: rawMessages } = await renderPrompt(
-      IssuesPrompt,
+      GitHubIssuesPrompt,
       {
         userPrompt: request.prompt,
         requestHandlerContext,

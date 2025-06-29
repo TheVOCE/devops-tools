@@ -1,5 +1,5 @@
 import { renderPrompt } from "@vscode/prompt-tsx";
-import { PullrequestPrompt } from "./PullrequestPrompt.js";
+import { GitHubPullrequestPrompt } from "./GitHubPullrequestPrompt.js";
 import type { RequestHandlerContext } from "../../requestHandlerContext.js";
 
 export async function handleGhPullrequestCommand(
@@ -9,7 +9,7 @@ export async function handleGhPullrequestCommand(
 
   if (model) {
     const { messages } = await renderPrompt(
-      PullrequestPrompt,
+      GitHubPullrequestPrompt,
       {
         userPrompt: request.prompt,
         requestHandlerContext,

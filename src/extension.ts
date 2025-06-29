@@ -1,9 +1,8 @@
 import * as vscode from "vscode";
-import { handleGhIssueCommand } from "./github/issues/issueCommand.js";
-// import { addCommand } from "./addCommand.js";
+import { handleGhIssueCommand } from "./github/issues/GitHubIssueCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
-import { handleGhPullrequestCommand } from "./github/pullrequests/pullrequestCommand.js";
+import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequestCommand.js";
 
 const PARTICIPANT_ID = "voce.devops";
 
@@ -30,7 +29,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
     try {
       [model] = await vscode.lm.selectChatModels({
         vendor: "copilot",
-        family: "gpt-4o",
+        family: "gpt-4.1",
       });
     } catch (err) {
       // Fallback or handle error if gpt-4o is not available

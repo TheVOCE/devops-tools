@@ -2,9 +2,9 @@ import * as vscode from "vscode";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
   determineGhOwnerAndRepoToUse,
-  type Comment,
-  type GitHubResult,
 } from "../gitHub";
+import { type GitHubComment } from "../GitHubComment";
+import { type GitHubResult } from "../GitHubResult";
 
 export function StateFullPrInStream(
   stream: vscode.ChatResponseStream,
@@ -42,7 +42,7 @@ export async function getPullrequestById(
     throw new Error(`Can't find PR #${pull_number} in repo '${repo}'.`);
   }
   try {
-    let comments: Comment[] = [];
+    let comments: GitHubComment[] = [];
     if (withComments) {
       comments = (
         await octokit.rest.pulls.listReviewComments({
@@ -50,7 +50,7 @@ export async function getPullrequestById(
           repo,
           pull_number,
         })
-      ).data as Comment[];
+      ).data as GitHubComment[];
     }
 
     return { data: pullrequest, comments: comments };

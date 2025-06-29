@@ -3,23 +3,6 @@ import * as path from "path";
 import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 
-export interface GitHubResult {
-  comments: Comment[];
-  data?: {
-    title: string;
-    body: string;
-    html_url: string;
-    state: string;
-    reason: string;
-  };
-}
-
-export interface Comment {
-  id: number;
-  url: string;
-  body?: string | undefined;
-}
-
 export async function getGitHubOwnerAndRepo() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -48,7 +31,7 @@ export async function getGitHubOwnerAndRepo() {
 
     const remoteUrl = remotes[0].refs.fetch;
     console.log(`Remote URL: ${remoteUrl}`);
-    
+
     const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
     if (!match) {
       console.error("Remote repository is not a GitHub repository.");

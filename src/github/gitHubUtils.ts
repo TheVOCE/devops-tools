@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 const issueNumberRegex = /!(\d+)(\+?)/; // prefix: !, issue number, optional: + for comments
 const ghRepoRegex = /gh:(.+)\/(.+?)[\s;,\/:]/; // for specifying repo owner and repo name
 
-export function parseValuesFromPrompt(
+export function parseGitHubValuesFromPrompt(
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream
 ) {
