@@ -1,4 +1,7 @@
 import * as vscode from "vscode";
+import * as azdev from "azure-devops-node-api";
+import { IWorkItemTrackingApi } from "azure-devops-node-api/WorkItemTrackingApi";
+import { WorkItem, Comment, WorkItemExpand } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import { determineAzDoOrgAndProjectToUse } from "../azd";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
@@ -23,6 +26,41 @@ export function StateFullWorkItemInStream(
   stream.markdown("\n\n----\n\n");
 }
 
+// Get Azure DevOps API connection
+async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
+  // Try to get stored PAT token
+  const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
+  
+  if (!token) {
+    // If no token is configured, provide helpful error message
+    const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
+    vscode.window.showWarningMessage(message, "Open Settings").then(selection => {
+      if (selection === "Open Settings") {
+        vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
+      }
+    });
+    throw new Error(message);
+  }
+
+  const authHandler = azdev.getPersonalAccessTokenHandler(token);
+  const connection = new azdev.WebApi(orgUrl, authHandler);
+  return connection;
+}
+
+// Fallback function to provide mock data when API is not available
+function getMockWorkItem(workItemId: number, org: string, project: string) {
+  return {
+    id: workItemId,
+    fields: {
+      "System.Title": `Mock Work Item ${workItemId}`,
+      "System.Description": "This is mock data. Configure Azure DevOps PAT token for real data.",
+      "System.State": "Active",
+      "System.WorkItemType": "Task"
+    },
+    url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
+  };
+}
+
 //get work item object from Azure DevOps by its work item id
 export async function getWorkItemAndCommentsById(
   requestHandlerContext: RequestHandlerContext,
@@ -37,34 +75,68 @@ export async function getWorkItemAndCommentsById(
     requestHandlerContext
   );
 
-  let workItem: any = {};
+  const orgUrl = `https://dev.azure.com/${org}`;
+  
+  let workItem: WorkItem;
+  let useMockData = false;
+  
   try {
-    // For now, we'll return mock data until MCP Azure DevOps tools are properly integrated
-    workItem = {
-      id: workItemId,
-      fields: {
-        "System.Title": `Work Item ${workItemId}`,
-        "System.Description": "Sample work item description",
-        "System.State": "Active",
-        "System.WorkItemType": "Task"
-      },
-      url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
-    };
+    const connection = await getAzureDevOpsConnection(orgUrl);
+    const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
+    
+    // Get work item with all fields
+    workItem = await witApi.getWorkItem(workItemId, undefined, undefined, WorkItemExpand.All);
+    
+    if (!workItem) {
+      throw new Error(`Work item !${workItemId} not found`);
+    }
   } catch (err) {
-    throw new Error(`Can't find work item #${workItemId} in project '${project}'.`);
+    // If API call fails (e.g., no PAT token), use mock data
+    requestHandlerContext.stream.progress("⚠️ Using mock data - configure Azure DevOps PAT for real data");
+    useMockData = true;
+    workItem = getMockWorkItem(workItemId, org, project) as WorkItem;
   }
 
   try {
     let comments: AzDevOpsComment[] = [];
-    if (withComments) {
-      // For now, return empty comments until MCP tools are integrated
-      comments = [];
+    if (withComments && !useMockData) {
+      try {
+        const connection = await getAzureDevOpsConnection(orgUrl);
+        const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
+        
+        // Get work item comments
+        const commentsResult = await witApi.getComments(project, workItemId);
+        if (commentsResult && commentsResult.comments) {
+          comments = commentsResult.comments.map((comment: Comment) => ({
+            id: comment.id || 0,
+            url: comment.url || "",
+            body: comment.text || ""
+          }));
+        }
+      } catch (commentsErr) {
+        // If comments fail, continue without them
+        requestHandlerContext.stream.progress("⚠️ Could not load comments");
+      }
     }
 
-    return { data: workItem, comments: comments };
+    // Transform the work item to match our expected format
+    const transformedWorkItem = {
+      id: workItem.id || workItemId,
+      fields: {
+        ...workItem.fields,
+        "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItemId}`,
+        "System.Description": workItem.fields?.["System.Description"] || "",
+        "System.State": workItem.fields?.["System.State"] || "Unknown",
+        "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
+      },
+      url: workItem.url || `${orgUrl}/${project}/_workitems/edit/${workItemId}`
+    };
+
+    return { data: transformedWorkItem, comments: comments };
   } catch (err) {
-    throw new Error(
-      `Can't get comments for work item #${workItemId} of project '${project}'.`
-    );
+    if (err instanceof Error) {
+      throw new Error(`Can't get comments for work item !${workItemId} of project '${project}': ${err.message}`);
+    }
+    throw new Error(`Can't get comments for work item !${workItemId} of project '${project}'.`);
   }
 }

@@ -48,23 +48,28 @@
             "properties": {
                 "voce.echoFullIssue": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "echo the full issue title and description in the chat."
                 },
                 "voce.echoIssueComments": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "echo the comments of issue chat (only if echoFullIssue is also set)."
                 },
                 "voce.echoFullWorkItem": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "echo the full work item title and description in the chat."
                 },
                 "voce.echoWorkItemComments": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "echo the comments of work item chat (only if echoFullWorkItem is also set)."
+                },
+                "voce.azureDevOpsPat": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Personal Access Token for Azure DevOps API access. Required for work item functionality."
                 }
             }
         },
