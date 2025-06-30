@@ -57,7 +57,7 @@ See [AZURE_DEVOPS_API_SETUP.md](./AZURE_DEVOPS_API_SETUP.md) for details.
 ## Inspiration
 
 This Extension is based on the chat sample of [vscode extension guides](https://github.com/microsoft/vscode-extension-samples/tree/main/chat-sample)
-documented [here](https://code.visualstudio.com/api/extension-guides/chat)
+documented [Chat Example](https://code.visualstudio.com/api/extension-guides/chat)
 
 ### Authors
 

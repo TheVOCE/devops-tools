@@ -91,6 +91,7 @@ The extension gracefully handles:
 ### "Mock data" warning
 
 If you see "Using mock data" warnings:
+
 1. Verify your PAT token is correctly configured
 2. Check the token has the required scopes
 3. Ensure the token hasn't expired
@@ -100,4 +101,3 @@ If you see "Using mock data" warnings:
 - Verify the work item ID exists
 - Check you have read permissions for the work item
 - Ensure you're in the correct organization/project context
-
