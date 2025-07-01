@@ -1,37 +1,28 @@
 import * as vscode from "vscode";
 import {
   AssistantMessage,
-  BasePromptElementProps,
   PromptElement,
   PromptSizing,
   UserMessage,
 } from "@vscode/prompt-tsx";
-import type { RequestHandlerContext } from "../requestHandlerContext";
-import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../consts";
+import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
   getPullrequestById,
   StateFullPrInStream,
-} from "./pullrequestFunctions";
-import { parseValuesFromPrompt } from "../utils";
-import type { GitHubResult } from "../gitHub";
+} from "./gitHubPullrequestFunctions";
+import { parseGitHubValuesFromPrompt } from "../gitHubUtils";
+import type { GitHubResult } from "../GitHubResult";
+import { GitHubPullrequestPromptState } from "./GitHubPullrequestPromptState";
+import { GitHubPullrequestPromptProps } from "./GitHubPullrequestPromptProps";
 
-export interface PullrequestPromptProps extends BasePromptElementProps {
-  requestHandlerContext: RequestHandlerContext;
-  userPrompt: string;
-}
-
-export interface PullrequestPromptState {
-  ghResult: GitHubResult;
-}
-
-export class PullrequestPrompt extends PromptElement<
-  PullrequestPromptProps,
-  PullrequestPromptState
+export class GitHubPullrequestPrompt extends PromptElement<
+  GitHubPullrequestPromptProps,
+  GitHubPullrequestPromptState
 > {
   override async prepare() {
     const { requestHandlerContext } = this.props;
     const { request, stream } = requestHandlerContext;
-    const { ghOwner, ghRepo, itemId } = parseValuesFromPrompt(request, stream);
+    const { ghOwner, ghRepo, itemId } = parseGitHubValuesFromPrompt(request, stream);
 
     const ghResult = (await getPullrequestById(
       requestHandlerContext,
@@ -63,7 +54,7 @@ export class PullrequestPrompt extends PromptElement<
     return { ghResult };
   }
 
-  render(state: PullrequestPromptState, sizing: PromptSizing) {
+  render(state: GitHubPullrequestPromptState, sizing: PromptSizing) {
     const { userPrompt } = this.props;
     const { ghResult } = state;
     return (

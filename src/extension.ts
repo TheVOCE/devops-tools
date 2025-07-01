@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import { handleGhIssueCommand } from "./issues/issueCommand.js";
-// import { addCommand } from "./addCommand.js";
+import { handleGhIssueCommand } from "./github/issues/GitHubIssueCommand.js";
+import { handleAzDoWorkItemCommand } from "./azd/workitems/AzDevOpsWorkItemCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
-import { handleGhPullrequestCommand } from "./pullrequests/pullrequestCommand.js";
+import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequestCommand.js";
 
 const PARTICIPANT_ID = "voce.devops";
 
@@ -30,7 +30,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
     try {
       [model] = await vscode.lm.selectChatModels({
         vendor: "copilot",
-        family: "gpt-4o",
+        family: "gpt-4.1",
       });
     } catch (err) {
       // Fallback or handle error if gpt-4o is not available
@@ -53,11 +53,19 @@ export function activate(vscontext: vscode.ExtensionContext) {
     // extension can use VS Code's `requestChatAccess` API to access the Copilot API.
     // The GitHub Copilot Chat extension implements this provider.
 
-    if (request.command === "issue") {
+    if (request.command === "gh-issue") {
       await handleGhIssueCommand(requestHandlerContext);
-    } else if (request.command === "pullrequest") {
+    } else if (request.command === "gh-pullrequest") {
       await handleGhPullrequestCommand(requestHandlerContext);
-    } else {
+    }
+    else if (request.command === "azd-workitem") {
+      await handleAzDoWorkItemCommand(requestHandlerContext);
+    }
+    else if (request.command === "azd-pullrequest") {
+      // Handle Azure DevOps pull request command
+      stream.markdown("Azure DevOps pull request command is not yet implemented.");
+    }
+    else {
       // Default handler or response for when no specific command is matched
       // For example, use the LLM to generate a response based on the prompt
       try {
@@ -112,4 +120,4 @@ export function activate(vscontext: vscode.ExtensionContext) {
   // );
 }
 
-export function deactivate() {}
+export function deactivate() { }

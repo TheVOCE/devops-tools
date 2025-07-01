@@ -1,24 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
-import type { RequestHandlerContext } from "./requestHandlerContext";
-
-export interface GitHubResult {
-  comments: Comment[];
-  data?: {
-    title: string;
-    body: string;
-    html_url: string;
-    state: string;
-    reason: string;
-  };
-}
-
-export interface Comment {
-  id: number;
-  url: string;
-  body?: string | undefined;
-}
+import type { RequestHandlerContext } from "../requestHandlerContext";
 
 export async function getGitHubOwnerAndRepo() {
   const editor = vscode.window.activeTextEditor;
@@ -30,6 +13,7 @@ export async function getGitHubOwnerAndRepo() {
   const filePath = editor.document.uri.fsPath;
   const fileDirectory = path.dirname(filePath);
 
+  console.log("Get GitHub owner and repo name");
   const git = simpleGit(fileDirectory);
 
   try {
@@ -46,13 +30,13 @@ export async function getGitHubOwnerAndRepo() {
     }
 
     const remoteUrl = remotes[0].refs.fetch;
+    console.log(`Remote URL: ${remoteUrl}`);
+
     const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
     if (!match) {
       console.error("Remote repository is not a GitHub repository.");
       return;
     }
-
-    console.log(`Remote URL: ${remoteUrl}`);
 
     const [owner, repo] = match[1].split("/");
     return { owner, repo };

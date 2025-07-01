@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
-import type { RequestHandlerContext } from "../requestHandlerContext";
-import { determineGhOwnerAndRepoToUse, type Comment, type GitHubResult } from "../gitHub";
+import type { RequestHandlerContext } from "../../requestHandlerContext";
+import { determineGhOwnerAndRepoToUse } from "../gitHub";
+import { type GitHubComment } from "../GitHubComment";
+import { type GitHubResult } from "../GitHubResult";
 
 export function StateFullIssueInStream(
   stream: vscode.ChatResponseStream,
   issue: { title: string; body: string },
-  comments: Comment[]
+  comments: GitHubComment[]
 ) {
   stream.markdown(`🟣Issue: **${issue.title}**\n\n`);
   stream.markdown(issue.body?.replaceAll("\n", "\n> ") + "");
@@ -45,7 +47,7 @@ export async function getIssueAndCommentsById(
     throw new Error(`Can't find issue #${issue_number} in repo '${repo}'.`);
   }
   try {
-    let comments: Comment[] = [];
+    let comments: GitHubComment[] = [];
     if (withComments) {
       comments = (
         await octokit.rest.issues.listComments({
@@ -53,7 +55,7 @@ export async function getIssueAndCommentsById(
           repo,
           issue_number,
         })
-      ).data as Comment[];
+      ).data as GitHubComment[];
     }
 
     return { data: issue, comments: comments };

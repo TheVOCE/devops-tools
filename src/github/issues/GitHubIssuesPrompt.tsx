@@ -1,37 +1,28 @@
 import * as vscode from "vscode";
 import {
   AssistantMessage,
-  BasePromptElementProps,
   PromptElement,
   PromptSizing,
   UserMessage,
 } from "@vscode/prompt-tsx";
-import type { RequestHandlerContext } from "../requestHandlerContext";
 import {
   getIssueAndCommentsById,
   StateFullIssueInStream,
-} from "./issueFunctions";
-import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../consts";
-import type { GitHubResult } from "../gitHub";
-import { parseValuesFromPrompt } from "../utils";
+} from "./gitHubIssueFunctions";
+import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
+import type { GitHubResult } from "../GitHubResult";
+import { parseGitHubValuesFromPrompt } from "../gitHubUtils";
+import { GitHubIssuesPromptProps } from "./GitHubIssuesPromptProps";
+import { GitHubIssuesPromptState } from "./GitHubIssuesPromptState";
 
-export interface IssuesPromptProps extends BasePromptElementProps {
-  requestHandlerContext: RequestHandlerContext;
-  userPrompt: string;
-}
-
-export interface IssuesPromptState {
-  ghResult: GitHubResult;
-}
-
-export class IssuesPrompt extends PromptElement<
-  IssuesPromptProps,
-  IssuesPromptState
+export class GitHubIssuesPrompt extends PromptElement<
+  GitHubIssuesPromptProps,
+  GitHubIssuesPromptState
 > {
   override async prepare() {
     const { requestHandlerContext } = this.props;
     const { request, stream } = requestHandlerContext;
-    const { ghOwner, ghRepo, itemId, commentsUsage } = parseValuesFromPrompt(
+    const { ghOwner, ghRepo, itemId, commentsUsage } = parseGitHubValuesFromPrompt(
       request,
       stream
     );
@@ -71,7 +62,7 @@ export class IssuesPrompt extends PromptElement<
     return { ghResult };
   }
 
-  render(state: IssuesPromptState, sizing: PromptSizing) {
+  render(state: GitHubIssuesPromptState, sizing: PromptSizing) {
     const { userPrompt } = this.props;
     const { ghResult } = state;
     return (
