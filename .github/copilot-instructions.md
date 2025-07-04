@@ -15,3 +15,9 @@ Refer to that sample for more information about how to create a chat extension:
   - use this as example implementation for a simple participant.
 - [src/toolParticipant.ts](https://raw.githubusercontent.com/microsoft/vscode-extension-samples/refs/heads/main/chat-sample/src/toolParticipant.ts)
   - use this as example implementation for a tool participant.
+
+## Interacting with Azure DevOps
+- Use Azure DevOps Client for Node.js for interacting with AzDo
+
+# Functional requirements
+- Don't use # or @ for parsing pull request id's, work item id' or issue id's from users prompt. Stick with ! as prefix and + for retrieving comments.
