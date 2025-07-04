@@ -63,7 +63,14 @@ export function activate(vscontext: vscode.ExtensionContext) {
       await handleAzDoWorkItemCommand(requestHandlerContext);
     }
     else if (request.command === "azd-pullrequest") {
-      await handleAzDoPullrequestCommand(requestHandlerContext);
+      try {
+        await handleAzDoPullrequestCommand(requestHandlerContext);
+      } catch (err) {
+        console.error("Error handling azd-pullrequest command:", err);
+        stream.markdown(
+          "Sorry, an error occurred while processing the Azure DevOps pull request command."
+        );
+      }
     }
     else {
       // Default handler or response for when no specific command is matched
