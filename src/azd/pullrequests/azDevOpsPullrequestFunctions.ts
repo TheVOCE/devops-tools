@@ -103,20 +103,19 @@ export async function getPullrequestById(
     const repoId = await findRepositoryByRemoteUrl(gitApi, project);
     
     pullrequest = await gitApi.getPullRequest(repoId, pullRequestId, project);
+    // Reuse connection and repoId for comments
+    const sharedConnection = connection;
+    const sharedRepoId = repoId;
   } catch (err) {
     throw new Error(`Can't find PR #${pullRequestId} in project '${project}'. Error: ${err}`);
   }
   
   try {    let comments: AzDevOpsComment[] = [];
     if (withComments) {
-      const connection = await getAzureDevOpsApi(requestHandlerContext, org);
-      const gitApi: IGitApi = await connection.getGitApi();
-      
-      // Find the repository by matching the remote URL
-      const repoId = await findRepositoryByRemoteUrl(gitApi, project);
+      const gitApi: IGitApi = await sharedConnection.getGitApi();
       
       // Get pull request threads (comments)
-      const threads = await gitApi.getThreads(repoId, pullRequestId, project);
+      const threads = await gitApi.getThreads(sharedRepoId, pullRequestId, project);
       
       // Flatten comments from all threads
       comments = threads.flatMap(thread => 
