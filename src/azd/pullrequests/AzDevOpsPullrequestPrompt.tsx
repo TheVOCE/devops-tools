@@ -72,7 +72,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
               ? `Do also regard the comments: ${
                   azdoResult?.comments
                     ?.map((comment) => comment.body)
-                    .join("\n\n") + ""
+                    .join("\n\n")
                 }`
               : "")}
         </UserMessage>
