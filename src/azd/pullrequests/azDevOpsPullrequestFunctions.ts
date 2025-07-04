@@ -8,6 +8,7 @@ import {
 } from "../azd";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
+import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 
 export function StateFullPrInStream(
   stream: vscode.ChatResponseStream,
@@ -131,10 +132,10 @@ export async function getPullrequestById(
     const transformedData = {
       id: pullrequest.pullRequestId,
       fields: {
-        "System.Title": pullrequest.title || "",
-        "System.Description": pullrequest.description || "",
-        "System.State": pullrequest.status || "",
-        "System.WorkItemType": "Pull Request"
+      "System.Title": pullrequest.title || "",
+      "System.Description": pullrequest.description || "",
+      "System.State": PullRequestStatus[pullrequest.status] || "",
+      "System.WorkItemType": "Pull Request"
       },
       url: `https://dev.azure.com/${org}/${project}/_git/${pullrequest.repository?.name}/pullrequest/${pullRequestId}`
     };
