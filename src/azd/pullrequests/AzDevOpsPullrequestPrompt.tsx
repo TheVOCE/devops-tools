@@ -38,6 +38,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     const config = vscode.workspace.getConfiguration("voce");
     const echoFullPullRequest = config.get("echoFullWorkItem", false) as boolean;
     const echoPullRequestComments = config.get("echoWorkItemComments", false) as boolean;
+    this.setState({ echoPullRequestComments });
     
     if (echoFullPullRequest) {
       StateFullPrInStream(stream, {
