@@ -12,7 +12,7 @@
     },
     "version": "0.2.2",
     "engines": {
-        "vscode": "^1.95.0"
+        "vscode": "^1.101.0"
     },
     "categories": [
         "AI",
@@ -114,7 +114,7 @@
         "lint": "eslint . --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "package": "npm run vscode:prepublish && vsce package && npm run move-packages-installer-dir",
-        "move-packages-installer-dir": "mkdir -p ./installer && mv *.vsix ./installer/ 2>/dev/null"
+        "move-packages-installer-dir": "node ./build/move-vsix-to-installer.js"
     },
     "dependencies": {
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1",
