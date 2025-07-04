@@ -22,13 +22,14 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
   override async prepare() {
     const { requestHandlerContext } = this.props;
     const { request, stream } = requestHandlerContext;
-    const { azdoOrg, azdoProject, itemId } = parseAzDevOpsValuesFromPrompt(request, stream);
+    const { azdoOrg, azdoProject, itemId, commentsUsage } = parseAzDevOpsValuesFromPrompt(request, stream);
 
     const azdoResult = (await getPullrequestById(
       requestHandlerContext,
       Number(itemId),
       azdoOrg,
-      azdoProject
+      azdoProject,
+      commentsUsage === "+"
     )) as AzDevOpsResult;
 
     stream.progress(`PR "${azdoResult?.data?.fields["System.Title"]}" loaded.`);

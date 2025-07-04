@@ -86,7 +86,7 @@ export async function getPullrequestById(
   pullRequestId: number,
   azdoOrg: string = "",
   azdoProject: string = "",
-  withComments = false
+  withComments = false,
 ): Promise<AzDevOpsResult> {
   const { org, project } = await determineAzDoOrgAndProjectToUse(
     azdoOrg,

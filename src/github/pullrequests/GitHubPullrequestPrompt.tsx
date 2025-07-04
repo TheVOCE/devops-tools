@@ -22,13 +22,14 @@ export class GitHubPullrequestPrompt extends PromptElement<
   override async prepare() {
     const { requestHandlerContext } = this.props;
     const { request, stream } = requestHandlerContext;
-    const { ghOwner, ghRepo, itemId } = parseGitHubValuesFromPrompt(request, stream);
+    const { ghOwner, ghRepo, itemId, commentsUsage } = parseGitHubValuesFromPrompt(request, stream);
 
     const ghResult = (await getPullrequestById(
       requestHandlerContext,
       Number(itemId),
       ghOwner,
-      ghRepo
+      ghRepo,
+      commentsUsage === "+"
     )) as GitHubResult;
 
     stream.progress(`PR "${ghResult?.data?.title}" loaded.`);
