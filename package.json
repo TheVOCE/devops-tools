@@ -114,7 +114,7 @@
         "lint": "eslint . --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "package": "npm run vscode:prepublish && vsce package && npm run move-packages-installer-dir",
-        "move-packages-installer-dir": "node -e \"const fs=require('fs'), path=require('path');const inst='installer';if(!fs.existsSync(inst)){fs.mkdirSync(inst);}fs.readdirSync('.').filter(f=>f.endsWith('.vsix')).forEach(f=>{const dest=path.join(inst,f);if(fs.existsSync(f)){try{fs.renameSync(f,dest);}catch(e){console.error('Failed to move',f,e);}}});\""
+        "move-packages-installer-dir": "node ./build/move-vsix-to-installer.js"
     },
     "dependencies": {
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1",
