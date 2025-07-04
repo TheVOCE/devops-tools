@@ -78,7 +78,7 @@
                 "id": "voce.devops",
                 "fullName": "VOCE-DevOps - Vs-cOde Copilot Extension",
                 "name": "voce",
-                "description": "VOCE-DevOps: GitHub `!<issueNumber>` or Azure DevOps `#<workItemNumber>`, append `+` for including comments.",
+                "description": "VOCE-DevOps: GitHub `!<issueNumber>` or `!<prNumber>` and Azure DevOps `!<workItemNumber>` or `!<prNumber>`, append `+` for including comments.",
                 "isSticky": true,
                 "commands": [
                     {
@@ -95,7 +95,7 @@
                     },
                     {
                         "name": "azd-pullrequest",
-                        "description": "get data from Azure DevOps pullrequest"
+                        "description": "get data from Azure DevOps pullrequest using `!<prNumber>`. Use `azdo:<org>/<project>` to add Azure DevOps context."
                     }
                 ]
             }
