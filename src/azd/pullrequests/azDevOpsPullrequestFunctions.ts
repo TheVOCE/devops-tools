@@ -4,6 +4,7 @@ import { IGitApi } from "azure-devops-node-api/GitApi";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
   determineAzDoOrgAndProjectToUse,
+  getAzDevOpsOrgAndProject,
 } from "../azd";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
@@ -38,6 +39,46 @@ async function getAzureDevOpsApi(
   return connection;
 }
 
+async function findRepositoryByRemoteUrl(
+  gitApi: IGitApi,
+  project: string
+): Promise<string> {
+  // Get the current repository information from git context
+  const gitContext = await getAzDevOpsOrgAndProject();
+  
+  if (!gitContext?.remoteUrl) {
+    // Fallback to first repository if we can't determine from git context
+    const repos = await gitApi.getRepositories(project);
+    if (repos.length === 0) {
+      throw new Error(`No repositories found in project '${project}'.`);
+    }
+    return repos[0].id!;
+  }
+
+  // Extract repository name from the remote URL
+  const repoNameMatch = gitContext.remoteUrl.match(/[/_]git[/_]([^/?]+)/);
+  const repoName = repoNameMatch ? repoNameMatch[1] : null;
+
+  if (!repoName) {
+    // Fallback to first repository if we can't extract repo name
+    const repos = await gitApi.getRepositories(project);
+    if (repos.length === 0) {
+      throw new Error(`No repositories found in project '${project}'.`);
+    }
+    return repos[0].id!;
+  }
+
+  // Get all repositories and find the one matching our remote URL
+  const repos = await gitApi.getRepositories(project);
+  const matchingRepo = repos.find(repo => repo.name === repoName);
+  
+  if (!matchingRepo) {
+    throw new Error(`Repository '${repoName}' not found in project '${project}'.`);
+  }
+  
+  return matchingRepo.id!;
+}
+
 //get pull request object from Azure DevOps by its PR id
 export async function getPullrequestById(
   requestHandlerContext: RequestHandlerContext,
@@ -57,30 +98,21 @@ export async function getPullrequestById(
     const connection = await getAzureDevOpsApi(requestHandlerContext, org);
     const gitApi: IGitApi = await connection.getGitApi();
     
-    // First, we need to get the repository ID
-    const repos = await gitApi.getRepositories(project);
-    if (repos.length === 0) {
-      throw new Error(`No repositories found in project '${project}'.`);
-    }
-    
-    // For now, use the first repository. In a real implementation, you might want to
-    // determine the correct repository based on the current context
-    const repoId = repos[0].id!;
+    // Find the repository by matching the remote URL
+    const repoId = await findRepositoryByRemoteUrl(gitApi, project);
     
     pullrequest = await gitApi.getPullRequest(repoId, pullRequestId, project);
   } catch (err) {
     throw new Error(`Can't find PR #${pullRequestId} in project '${project}'. Error: ${err}`);
   }
   
-  try {
-    let comments: AzDevOpsComment[] = [];
+  try {    let comments: AzDevOpsComment[] = [];
     if (withComments) {
       const connection = await getAzureDevOpsApi(requestHandlerContext, org);
       const gitApi: IGitApi = await connection.getGitApi();
       
-      // Get the repository ID again (we could optimize this)
-      const repos = await gitApi.getRepositories(project);
-      const repoId = repos[0].id!;
+      // Find the repository by matching the remote URL
+      const repoId = await findRepositoryByRemoteUrl(gitApi, project);
       
       // Get pull request threads (comments)
       const threads = await gitApi.getThreads(repoId, pullRequestId, project);
