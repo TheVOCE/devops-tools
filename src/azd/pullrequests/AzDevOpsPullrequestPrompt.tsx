@@ -41,6 +41,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     if (echoFullPullRequest) {
       StateFullPrInStream(stream, {
         title: azdoResult?.data?.fields["System.Title"] || "",
+        status: azdoResult?.data?.fields["System.State"] || "",
         description: azdoResult?.data?.fields["System.Description"] || ""
       });
     } else {

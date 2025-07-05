@@ -12,9 +12,9 @@ import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterface
 
 export function StateFullPrInStream(
   stream: vscode.ChatResponseStream,
-  pullrequest: { title: string; description: string }
+  pullrequest: { title: string; status:string; description: string }
 ) {
-  stream.markdown(`🔵PR: **${pullrequest.title}**\n\n`);
+  stream.markdown(`🔵PR [${pullrequest.status}]: **${pullrequest.title}**\n\n`);
   stream.markdown(pullrequest.description?.replaceAll("\n", "\n> ") + "");
   stream.markdown("\n\n----\n\n");
 }
@@ -95,6 +95,8 @@ export async function getPullrequestById(
   );
 
   let pullrequest: any = {};
+  let sharedConnection: WebApi;
+  let sharedRepoId: string;
   try {
     const connection = await getAzureDevOpsApi(requestHandlerContext, org);
     const gitApi: IGitApi = await connection.getGitApi();
@@ -104,8 +106,8 @@ export async function getPullrequestById(
     
     pullrequest = await gitApi.getPullRequest(repoId, pullRequestId, project);
     // Reuse connection and repoId for comments
-    const sharedConnection = connection;
-    const sharedRepoId = repoId;
+    sharedConnection = connection;
+    sharedRepoId = repoId;
   } catch (err) {
     throw new Error(`Can't find PR #${pullRequestId} in project '${project}'. Error: ${err}`);
   }
@@ -142,7 +144,7 @@ export async function getPullrequestById(
     return { data: transformedData, comments: comments };
   } catch (err) {
     throw new Error(
-      `Can't get comments for PR #${pullRequestId} of project '${project}'. Error: ${err}`
+      `Can't get comments for PR !${pullRequestId} of project '${project}'. Error: ${err}`
     );
   }
 }
