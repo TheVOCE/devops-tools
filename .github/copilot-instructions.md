@@ -1,4 +1,4 @@
-# VOCE - Visual Studio Extension for GitGub Copilot
+# VOCE-DevOps - Vs-cOde Copilot Extension
 
 This project is as Visual Studio Code extension for GitHub Copilot whichs helps users interacting with DevOps platforms like Azure DevOps and GitHub. 
 It is a TypeScript project. The extension is a copilot chat extension for Visual Studio Code adding additional participants to the chat.
@@ -25,3 +25,4 @@ Refer to that sample for more information about how to create a chat extension:
 
 ## Functional requirements
 - Don't use # or @ for parsing pull request id's, work item id' or issue id's from users prompt. Stick with ! as prefix and + for retrieving comments.
+- Keep the name "VOCE-DevOps - Vs-cOde Copilot Extension" and don't try to change it
