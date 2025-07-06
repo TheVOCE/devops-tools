@@ -27,6 +27,7 @@ The extension now uses AI to understand natural language requests! You can:
 - **Mix contexts**: "Pull request 789 from microsoft/vscode" → extracts repo context
 
 The AI parser works as a fallback when:
+
 - No explicit command is provided
 - Command is provided but syntax is unclear or incomplete
 
@@ -60,6 +61,7 @@ The AI parser works as a fallback when:
 ```
 
 The AI will automatically:
+
 - Detect the correct command type
 - Extract item IDs
 - Understand when you want comments/discussion

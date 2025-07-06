@@ -5,6 +5,7 @@ This document demonstrates how the new LLM-based command parsing works in the VO
 ## Before the Enhancement
 
 The extension only recognized specific syntax patterns:
+
 - `!123` for work item/issue IDs
 - `!123+` for including comments
 - `azdo:org/project` for Azure DevOps context
@@ -16,8 +17,10 @@ The extension only recognized specific syntax patterns:
 The extension now uses AI to understand natural language requests and can parse:
 
 ### Scenario 1: No Command Provided
+
 **User input:** "Show me work item 123"
-**AI parsing:** 
+**AI parsing:**
+
 ```json
 {
   "command": "azd-workitem",
@@ -26,12 +29,15 @@ The extension now uses AI to understand natural language requests and can parse:
   "confidence": 0.9
 }
 ```
+
 **Result:** Extension automatically routes to Azure DevOps work item handler
 
 ### Scenario 2: Command with Incorrect Syntax
+
 **User input:** `/azd-workitem tell me about task 456 with all the discussions`
 **Regex parsing:** Fails to find `!456` pattern
 **AI parsing:**
+
 ```json
 {
   "command": "azd-workitem",
@@ -40,11 +46,14 @@ The extension now uses AI to understand natural language requests and can parse:
   "confidence": 0.85
 }
 ```
+
 **Result:** Extension understands user wants work item 456 with comments
 
 ### Scenario 3: Complex Context
+
 **User input:** "What's the latest on GitHub issue 789 from microsoft/vscode repository?"
 **AI parsing:**
+
 ```json
 {
   "command": "gh-issue",
@@ -55,6 +64,7 @@ The extension now uses AI to understand natural language requests and can parse:
   "confidence": 0.9
 }
 ```
+
 **Result:** Extension formats as `!789 gh:microsoft/vscode` for existing parsers
 
 ## How It Works
