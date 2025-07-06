@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
+import { WebApi, getPersonalAccessTokenHandler, getBearerHandler } from "azure-devops-node-api";
 import { IGitApi } from "azure-devops-node-api/GitApi";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
@@ -29,17 +29,46 @@ async function getAzureDevOpsApi(
   requestHandlerContext: RequestHandlerContext,
   org: string
 ): Promise<WebApi> {
-  // Get the PAT from settings
+  const orgUrl = `https://dev.azure.com/${org}`;
+  
+  try {
+    // First try to use VS Code Microsoft Account authentication
+    const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+      createIfNone: false, // Don't prompt user if no session exists
+      clearSessionPreference: false
+    });
+    
+    if (session) {
+      // Use Microsoft authentication token
+      const authHandler = getBearerHandler(session.accessToken);
+      const connection = new WebApi(orgUrl, authHandler);
+      return connection;
+    }
+  } catch (error) {
+    // If Microsoft authentication fails, silently continue to PAT fallback
+    console.log("Microsoft authentication not available, falling back to PAT token");
+  }
+
+  // Fallback to Personal Access Token
   const config = vscode.workspace.getConfiguration("voce");
   const pat = config.get("azureDevOpsPat", "") as string;
   
   if (!pat) {
-    throw new Error("Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in your settings.");
+    const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in your settings.";
+    vscode.window.showWarningMessage(message, "Sign In", "Open Settings").then(selection => {
+      if (selection === "Sign In") {
+        // Prompt user to sign in with Microsoft account
+        vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+          createIfNone: true
+        });
+      } else if (selection === "Open Settings") {
+        vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
+      }
+    });
+    throw new Error(message);
   }
-
-  const orgUrl = `https://dev.azure.com/${org}`;
   
-  // Create the API connection
+  // Create the API connection with PAT
   const authHandler = getPersonalAccessTokenHandler(pat);
   const connection = new WebApi(orgUrl, authHandler);
   

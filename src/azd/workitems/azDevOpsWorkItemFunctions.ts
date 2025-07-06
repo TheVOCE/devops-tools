@@ -26,16 +26,39 @@ export function StateFullWorkItemInStream(
   stream.markdown("\n\n----\n\n");
 }
 
-// Get Azure DevOps API connection
+// Get Azure DevOps API connection with Microsoft auth first, PAT fallback
 async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
-  // Try to get stored PAT token
+  try {
+    // First try to use VS Code Microsoft Account authentication
+    const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+      createIfNone: false, // Don't prompt user if no session exists
+      clearSessionPreference: false
+    });
+    
+    if (session) {
+      // Use Microsoft authentication token
+      const authHandler = azdev.getBearerHandler(session.accessToken);
+      const connection = new azdev.WebApi(orgUrl, authHandler);
+      return connection;
+    }
+  } catch (error) {
+    // If Microsoft authentication fails, silently continue to PAT fallback
+    console.log("Microsoft authentication not available, falling back to PAT token");
+  }
+
+  // Fallback to Personal Access Token
   const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
   
   if (!token) {
     // If no token is configured, provide helpful error message
-    const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
-    vscode.window.showWarningMessage(message, "Open Settings").then(selection => {
-      if (selection === "Open Settings") {
+    const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in VS Code settings to enable Azure DevOps integration.";
+    vscode.window.showWarningMessage(message, "Sign In", "Open Settings").then(selection => {
+      if (selection === "Sign In") {
+        // Prompt user to sign in with Microsoft account
+        vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+          createIfNone: true
+        });
+      } else if (selection === "Open Settings") {
         vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
       }
     });
