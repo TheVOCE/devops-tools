@@ -7,7 +7,7 @@ import {
 } from "@vscode/prompt-tsx";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
-  getGhPullrequestById as getGhPullrequestById,
+  getGhPullrequestById,
   StateFullGhPrInStream,
 } from "./gitHubPullrequestFunctions";
 import { parseGitHubValuesFromPrompt } from "../gitHubUtils";
