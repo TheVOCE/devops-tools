@@ -45,7 +45,7 @@ export async function getAzDevOpsOrgAndProject() {
 
     const org = match[1];
     const project = match[2];
-    return { org, project };
+    return { org, project, remoteUrl };
   } catch (err) {
     console.error(err + " It looks like there is no git context");
   }
@@ -74,6 +74,7 @@ export async function determineAzDoOrgAndProjectToUse(
     const gatheredAzDoOrgProject = (await getAzDevOpsOrgAndProject()) ?? {
       org: "",
       project: "",
+      remoteUrl: ""
     };
     if (gatheredAzDoOrgProject.org !== "" && gatheredAzDoOrgProject.project !== "") {
       org = gatheredAzDoOrgProject.org;

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { handleGhIssueCommand } from "./github/issues/GitHubIssueCommand.js";
 import { handleAzDoWorkItemCommand } from "./azd/workitems/AzDevOpsWorkItemCommand.js";
+import { handleAzDoPullrequestCommand } from "./azd/pullrequests/AzDevOpsPullrequestCommand.js";
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
 import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequestCommand.js";
@@ -62,8 +63,14 @@ export function activate(vscontext: vscode.ExtensionContext) {
       await handleAzDoWorkItemCommand(requestHandlerContext);
     }
     else if (request.command === "azd-pullrequest") {
-      // Handle Azure DevOps pull request command
-      stream.markdown("Azure DevOps pull request command is not yet implemented.");
+      try {
+        await handleAzDoPullrequestCommand(requestHandlerContext);
+      } catch (err) {
+        console.error("Error handling azd-pullrequest command:", err);
+        stream.markdown(
+          "Sorry, an error occurred while processing the Azure DevOps pull request command."
+        );
+      }
     }
     else {
       // Default handler or response for when no specific command is matched

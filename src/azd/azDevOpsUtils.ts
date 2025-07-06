@@ -1,16 +1,23 @@
 import * as vscode from "vscode";
 
-const workItemNumberRegex = /!(\d+)(\+?)/; // prefix: #, work item number, optional: + for comments
+const workItemNumberRegex = /!(\d+)(\+?)/; // prefix: !, work item number, optional: + for comments
 const azdoOrgProjectRegex = /azdo:(.+)\/(.+?)[\s;,\/:]/; // for specifying org and project name
 
 export function parseAzDevOpsValuesFromPrompt(
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream
 ) {
-  const match = request.prompt.match(workItemNumberRegex);
-  const [itemId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
+  const workItemMatch = request.prompt.match(workItemNumberRegex);
+  
+  let itemId = "";
+  let commentsUsage = "";
+  
+  if (workItemMatch) {
+    itemId = workItemMatch[1];
+    commentsUsage = workItemMatch[2];
+    stream.progress(`Work Item !${itemId} found in prompt.`);
+  } 
 
-  stream.progress(`Work Item !${itemId} found in prompt.`);
   const azdoMatch = request.prompt.match(azdoOrgProjectRegex);
   const [azdoOrg, azdoProject] = azdoMatch ? [azdoMatch[1], azdoMatch[2]] : ["", ""];
 

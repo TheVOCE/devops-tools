@@ -66,6 +66,26 @@
                     "default": true,
                     "description": "echo the comments of work item chat (only if echoFullWorkItem is also set)."
                 },
+                "voce.echoFullAzDPullRequest": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "echo the full pull request title and description in the chat."
+                },
+                "voce.echoAzDPullRequestComments": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "echo the comments of pull request chat (only if echoFullAzDPullRequest is also set)."
+                },
+                "voce.echoFullGHPullRequest": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "echo the full pull request title and description in the chat."
+                },
+                "voce.echoGhPullRequestComments": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "echo the comments of pull request chat (only if echoFullGhPullRequest is also set)."
+                },
                 "voce.azureDevOpsPat": {
                     "type": "string",
                     "default": "",
@@ -78,7 +98,7 @@
                 "id": "voce.devops",
                 "fullName": "VOCE-DevOps - Vs-cOde Copilot Extension",
                 "name": "voce",
-                "description": "VOCE-DevOps: GitHub `!<issueNumber>` or Azure DevOps `#<workItemNumber>`, append `+` for including comments.",
+                "description": "VOCE-DevOps: GitHub `!<issueNumber>` or `!<prNumber>` and Azure DevOps `!<workItemNumber>` or `!<prNumber>`, append `+` for including comments.",
                 "isSticky": true,
                 "commands": [
                     {
@@ -95,7 +115,7 @@
                     },
                     {
                         "name": "azd-pullrequest",
-                        "description": "get data from Azure DevOps pullrequest"
+                        "description": "get data from Azure DevOps pullrequest using `!<prNumber>`. Use `azdo:<org>/<project>` to add Azure DevOps context."
                     }
                 ]
             }
