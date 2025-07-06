@@ -32,7 +32,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
       Number(itemId),
       azdoOrg,
       azdoProject,
-      commentsUsage === "+"
+      commentsUsage
     )) as AzDevOpsResult;
 
     stream.progress(`🔷Work Item "${azdoResult?.data?.fields["System.Title"]}" loaded.`);

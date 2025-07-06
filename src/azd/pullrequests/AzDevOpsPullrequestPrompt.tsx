@@ -8,7 +8,7 @@ import {
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
   getAzdPullrequestById,
-  StateFullPrInStream,
+  StateFullAzDPrInStream,
 } from "./azDevOpsPullrequestFunctions";
 import { parseAzDevOpsValuesFromPrompt } from "../azDevOpsUtils";
 import type { AzDevOpsResult } from "../AzDevOpsResult";
@@ -37,13 +37,27 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
     const echoFullPullRequest = config.get("echoFullAzDPullRequest", false) as boolean;
-    
+    const echoPullRequestComments = config.get("echoAzDPullRequestComments", false) as boolean;
+
     if (echoFullPullRequest) {
-      StateFullPrInStream(stream, {
-        title: azdoResult?.data?.fields["System.Title"] || "",
-        status: azdoResult?.data?.fields["System.State"] || "",
-        description: azdoResult?.data?.fields["System.Description"] || ""
-      });
+      const echoPullRequestComments = config.get("echoAzDPullRequestComments", false) as boolean;
+      if (echoPullRequestComments) {
+        const commentsString = azdoResult?.comments
+          ? azdoResult.comments.map((comment: any) => comment.body).join("\n\n")
+          : "";
+        
+        StateFullAzDPrInStream(stream, {
+          title: azdoResult?.data?.fields["System.Title"] || "",
+          status: azdoResult?.data?.fields["System.State"] || "",
+          description: azdoResult?.data?.fields["System.Description"] || "",
+        }, commentsString);
+      } else {
+        StateFullAzDPrInStream(stream, {
+          title: azdoResult?.data?.fields["System.Title"] || "",
+          status: azdoResult?.data?.fields["System.State"] || "",
+          description: azdoResult?.data?.fields["System.Description"] || ""
+        });
+      }
     } else {
       stream.markdown(
         `🔵PR [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`

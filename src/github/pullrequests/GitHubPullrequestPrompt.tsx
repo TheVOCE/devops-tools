@@ -48,7 +48,7 @@ export class GitHubPullrequestPrompt extends PromptElement<
       }
       else
       {
-        StateFullPrInStream(stream, ghResult?.data!, null);
+        StateFullPrInStream(stream, ghResult?.data!);
       }
     } 
     else {
