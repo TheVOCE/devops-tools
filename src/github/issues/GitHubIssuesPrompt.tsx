@@ -32,7 +32,7 @@ export class GitHubIssuesPrompt extends PromptElement<
       Number(itemId),
       ghOwner,
       ghRepo,
-      commentsUsage === "+"
+      commentsUsage
     )) as GitHubResult;
 
     stream.progress(`🟣Issue "${ghResult?.data?.title}" loaded.`);
