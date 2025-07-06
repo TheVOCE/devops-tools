@@ -18,9 +18,23 @@ This Visual Studio Code Extension enriches Copilot with data from GitHub issues/
 - **Cross-org**: Use `azdo:<org>/<project>` syntax
 - **Real API**: Uses Azure DevOps Node.js API with PAT authentication
 
+### 🆕 Intelligent Parsing
+
+The extension now uses AI to understand natural language requests! You can:
+
+- **Ask naturally**: "Show me work item 123" → automatically detects Azure DevOps work item
+- **Skip exact syntax**: "What's GitHub issue 456 with comments?" → understands you want comments
+- **Mix contexts**: "Pull request 789 from microsoft/vscode" → extracts repo context
+
+The AI parser works as a fallback when:
+- No explicit command is provided
+- Command is provided but syntax is unclear or incomplete
+
 ## Usage
 
-### GitHub Issues
+### Traditional Syntax (Still Supported)
+
+#### GitHub Issues
 
 ```text
 @voce /gh-issue !1234 Provide implementation suggestion in C#
@@ -28,13 +42,28 @@ This Visual Studio Code Extension enriches Copilot with data from GitHub issues/
 @voce /gh-issue gh:owner/repo !1234 Cross-repository reference
 ```
 
-### Azure DevOps Work Items
+#### Azure DevOps Work Items
 
 ```text
-@voce /azd-workitem #5678 What's the status of this task?
-@voce /azd-workitem #5678+ Summarize the discussion
-@voce /azd-workitem azdo:myorg/myproject #5678 Cross-org reference
+@voce /azd-workitem !5678 What's the status of this task?
+@voce /azd-workitem !5678+ Summarize the discussion
+@voce /azd-workitem azdo:myorg/myproject !5678 Cross-org reference
 ```
+
+### 🆕 Natural Language (AI-Powered)
+
+```text
+@voce Show me work item 123
+@voce What's the status of GitHub issue 456 with all comments?
+@voce Tell me about pull request 789 from microsoft/vscode
+@voce Summarize Azure DevOps task 321 with discussion from contoso/webapp
+```
+
+The AI will automatically:
+- Detect the correct command type
+- Extract item IDs
+- Understand when you want comments/discussion
+- Parse repository or project context
 
 ## Setup
 
