@@ -43,7 +43,7 @@ export class GitHubPullrequestPrompt extends PromptElement<
         const commentsString = ghResult?.comments
           ? ghResult.comments.map((comment: any) => comment.body).join("\n\n")
           : "";
-          
+
         StateFullPrInStream(stream, ghResult?.data!, commentsString);
       }
       else
@@ -73,9 +73,9 @@ export class GitHubPullrequestPrompt extends PromptElement<
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The pullrequest to work on has the title: "${ghResult?.data?.title}" and the description: ${ghResult?.data?.body}. Use that information to give better answer for the following user query.` +
+          {`The GitHub pullrequest to work on has the title: "${ghResult?.data?.title}" and the description: ${ghResult?.data?.body}. Use that information to give better answer for the following user query.` +
             (ghResult?.comments && ghResult?.comments?.length > 0
-              ? `Do also regard the comments: ${ghResult?.comments
+              ? `Do also consider the comments: ${ghResult?.comments
                 ?.map((comment) => comment.body)
                 .join("\n\n") + ""
               }`
