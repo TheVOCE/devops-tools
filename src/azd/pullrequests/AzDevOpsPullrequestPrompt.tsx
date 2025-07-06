@@ -7,8 +7,8 @@ import {
 } from "@vscode/prompt-tsx";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
-  getPullrequestById,
-  StateFullPrInStream,
+  getAzdPullrequestById,
+  StateFullAzDPrInStream,
 } from "./azDevOpsPullrequestFunctions";
 import { parseAzDevOpsValuesFromPrompt } from "../azDevOpsUtils";
 import type { AzDevOpsResult } from "../AzDevOpsResult";
@@ -24,12 +24,12 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     const { request, stream } = requestHandlerContext;
     const { azdoOrg, azdoProject, itemId, commentsUsage } = parseAzDevOpsValuesFromPrompt(request, stream);
 
-    const azdoResult = (await getPullrequestById(
+    const azdoResult = (await getAzdPullrequestById(
       requestHandlerContext,
       Number(itemId),
       azdoOrg,
       azdoProject,
-      commentsUsage === "+"
+      commentsUsage
     )) as AzDevOpsResult;
 
     stream.progress(`PR "${azdoResult?.data?.fields["System.Title"]}" loaded.`);
@@ -37,13 +37,26 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
     const echoFullPullRequest = config.get("echoFullAzDPullRequest", false) as boolean;
-    
+    const echoPullRequestComments = config.get("echoAzDPullRequestComments", false) as boolean;
+
     if (echoFullPullRequest) {
-      StateFullPrInStream(stream, {
-        title: azdoResult?.data?.fields["System.Title"] || "",
-        status: azdoResult?.data?.fields["System.State"] || "",
-        description: azdoResult?.data?.fields["System.Description"] || ""
-      });
+      if (echoPullRequestComments) {
+        const commentsString = azdoResult?.comments
+          ? azdoResult.comments.map((comment: any) => `○ ${comment.body}`).join("\n\n")
+          : "";
+        
+        StateFullAzDPrInStream(stream, {
+          title: azdoResult?.data?.fields["System.Title"] || "",
+          status: azdoResult?.data?.fields["System.State"] || "",
+          description: azdoResult?.data?.fields["System.Description"] || "",
+        }, commentsString);
+      } else {
+        StateFullAzDPrInStream(stream, {
+          title: azdoResult?.data?.fields["System.Title"] || "",
+          status: azdoResult?.data?.fields["System.State"] || "",
+          description: azdoResult?.data?.fields["System.Description"] || ""
+        });
+      }
     } else {
       stream.markdown(
         `🔵PR [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
@@ -66,9 +79,9 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The pull request to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"]}. Use that information to give better answer for the following user query.` +
+          {`The Azure DevOps pull request to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"]}. Use that information to give better answer for the following user query.` +
             (azdoResult?.comments && azdoResult?.comments?.length > 0
-              ? `Do also regard the comments: ${
+              ? `Do also consider the comments: ${
                   azdoResult?.comments
                     ?.map((comment) => comment.body)
                     .join("\n\n")

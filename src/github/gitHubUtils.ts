@@ -8,7 +8,7 @@ export function parseGitHubValuesFromPrompt(
   stream: vscode.ChatResponseStream
 ) {
   const match = request.prompt.match(issueNumberRegex);
-  const [itemId, commentsUsage] = match ? [match[1], match[2]] : ["", ""];
+  const [itemId, commentsUsage] = match ? [match[1], match[2] === '+'] : ["", false];
 
   stream.progress(`Item #${itemId} found in prompt.`);
   const ghMatch = request.prompt.match(ghRepoRegex);

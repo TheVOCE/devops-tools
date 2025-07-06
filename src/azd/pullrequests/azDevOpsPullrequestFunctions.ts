@@ -10,12 +10,18 @@ import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 
-export function StateFullPrInStream(
+export function StateFullAzDPrInStream(
   stream: vscode.ChatResponseStream,
-  pullrequest: { title: string; status:string; description: string }
+  pullrequest: { title: string; status:string; description: string },
+  comments: string = ""
 ) {
-  stream.markdown(`🔵PR [${pullrequest.status}]: **${pullrequest.title}**\n\n`);
+  stream.markdown(`🔵PR [_${pullrequest.status}_]: **${pullrequest.title}**\n\n`);
   stream.markdown(pullrequest.description?.replaceAll("\n", "\n> ") + "");
+  stream.markdown("\n\n");
+  if (comments && comments.length > 0) {
+    stream.markdown(`> **Comments:**\n\n`);
+    stream.markdown(comments.replaceAll("\n", "\n> ") + "");
+  }
   stream.markdown("\n\n----\n\n");
 }
 
@@ -81,7 +87,7 @@ async function findRepositoryByRemoteUrl(
 }
 
 //get pull request object from Azure DevOps by its PR id
-export async function getPullrequestById(
+export async function getAzdPullrequestById(
   requestHandlerContext: RequestHandlerContext,
   pullRequestId: number,
   azdoOrg: string = "",

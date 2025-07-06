@@ -46,22 +46,22 @@
             "type": "object",
             "title": "VOCE Extension Configuration",
             "properties": {
-                "voce.echoFullIssue": {
+                "voce.echoFullGHIssue": {
                     "type": "boolean",
                     "default": true,
                     "description": "echo the full issue title and description in the chat."
                 },
-                "voce.echoIssueComments": {
+                "voce.echoGHIssueComments": {
                     "type": "boolean",
                     "default": true,
                     "description": "echo the comments of issue chat (only if echoFullIssue is also set)."
                 },
-                "voce.echoFullWorkItem": {
+                "voce.echoFullAzDWorkItem": {
                     "type": "boolean",
                     "default": true,
                     "description": "echo the full work item title and description in the chat."
                 },
-                "voce.echoWorkItemComments": {
+                "voce.echoAzDWorkItemComments": {
                     "type": "boolean",
                     "default": true,
                     "description": "echo the comments of work item chat (only if echoFullWorkItem is also set)."
@@ -81,7 +81,7 @@
                     "default": true,
                     "description": "echo the full pull request title and description in the chat."
                 },
-                "voce.echoGhPullRequestComments": {
+                "voce.echoGHPullRequestComments": {
                     "type": "boolean",
                     "default": true,
                     "description": "echo the comments of pull request chat (only if echoFullGhPullRequest is also set)."

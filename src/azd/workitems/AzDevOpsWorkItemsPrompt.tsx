@@ -32,15 +32,15 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
       Number(itemId),
       azdoOrg,
       azdoProject,
-      commentsUsage === "+"
+      commentsUsage
     )) as AzDevOpsResult;
 
     stream.progress(`🔷Work Item "${azdoResult?.data?.fields["System.Title"]}" loaded.`);
 
     // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
-    const echoFullWorkItem = config.get("echoFullWorkItem", false) as boolean;
-    const echoWorkItemComments = config.get("echoWorkItemComments", false) as boolean;
+    const echoFullWorkItem = config.get("echoFullAzDWorkItem", false) as boolean;
+    const echoWorkItemComments = config.get("echoAzDWorkItemComments", false) as boolean;
     if (echoFullWorkItem) {
       StateFullWorkItemInStream(
         stream,

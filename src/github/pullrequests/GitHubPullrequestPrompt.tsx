@@ -7,8 +7,8 @@ import {
 } from "@vscode/prompt-tsx";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
-  getPullrequestById,
-  StateFullPrInStream,
+  getGhPullrequestById,
+  StateFullGhPrInStream,
 } from "./gitHubPullrequestFunctions";
 import { parseGitHubValuesFromPrompt } from "../gitHubUtils";
 import type { GitHubResult } from "../GitHubResult";
@@ -24,23 +24,34 @@ export class GitHubPullrequestPrompt extends PromptElement<
     const { request, stream } = requestHandlerContext;
     const { ghOwner, ghRepo, itemId, commentsUsage } = parseGitHubValuesFromPrompt(request, stream);
 
-    const ghResult = (await getPullrequestById(
+    const ghResult = (await getGhPullrequestById(
       requestHandlerContext,
       Number(itemId),
       ghOwner,
       ghRepo,
-      commentsUsage === "+"
+      commentsUsage
     )) as GitHubResult;
 
     stream.progress(`PR "${ghResult?.data?.title}" loaded.`);
 
-    // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
     const echoFullGHPullRequest = config.get("echoFullGHPullRequest", false) as boolean;
-    const echoIssueComments = config.get("echoGhPullRequestComments", false) as boolean;
+    const echoGHPullRequestComments = config.get("echoGHPullRequestComments", false) as boolean;
     if (echoFullGHPullRequest) {
-      StateFullPrInStream(stream, ghResult?.data!);
-    } else {
+      if (echoGHPullRequestComments)
+      {
+        const commentsString = ghResult?.comments
+          ? ghResult.comments.map((comment: any) => `○ ${comment.body}`).join("\n\n")
+          : "";
+
+        StateFullGhPrInStream(stream, ghResult?.data!, commentsString);
+      }
+      else
+      {
+        StateFullGhPrInStream(stream, ghResult?.data!);
+      }
+    } 
+    else {
       stream.markdown(
         `🔵PR [_${ghResult.data?.state}_]: **${ghResult.data?.title}**\n\n`
       );
@@ -62,13 +73,12 @@ export class GitHubPullrequestPrompt extends PromptElement<
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The pullrequest to work on has the title: "${ghResult?.data?.title}" and the description: ${ghResult?.data?.body}. Use that information to give better answer for the following user query.` +
+          {`The GitHub pullrequest to work on has the title: "${ghResult?.data?.title}" and the description: ${ghResult?.data?.body}. Use that information to give better answer for the following user query.` +
             (ghResult?.comments && ghResult?.comments?.length > 0
-              ? `Do also regard the comments: ${
-                  ghResult?.comments
-                    ?.map((comment) => comment.body)
-                    .join("\n\n") + ""
-                }`
+              ? `Do also consider the comments: ${ghResult?.comments
+                ?.map((comment) => comment.body)
+                .join("\n\n") + ""
+              }`
               : "")}
         </UserMessage>
         <UserMessage priority={100}>{userPrompt}</UserMessage>
