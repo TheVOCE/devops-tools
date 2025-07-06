@@ -10,11 +10,11 @@ export function parseAzDevOpsValuesFromPrompt(
   const workItemMatch = request.prompt.match(workItemNumberRegex);
   
   let itemId = "";
-  let commentsUsage = "";
+  let commentsUsage = false;
   
   if (workItemMatch) {
     itemId = workItemMatch[1];
-    commentsUsage = workItemMatch[2];
+    commentsUsage = workItemMatch[2] === "+";
     stream.progress(`Work Item !${itemId} found in prompt.`);
   } 
 

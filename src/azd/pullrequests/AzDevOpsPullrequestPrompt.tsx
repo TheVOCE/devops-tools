@@ -7,7 +7,7 @@ import {
 } from "@vscode/prompt-tsx";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
-  getPullrequestById,
+  getAzdPullrequestById,
   StateFullPrInStream,
 } from "./azDevOpsPullrequestFunctions";
 import { parseAzDevOpsValuesFromPrompt } from "../azDevOpsUtils";
@@ -24,12 +24,12 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     const { request, stream } = requestHandlerContext;
     const { azdoOrg, azdoProject, itemId, commentsUsage } = parseAzDevOpsValuesFromPrompt(request, stream);
 
-    const azdoResult = (await getPullrequestById(
+    const azdoResult = (await getAzdPullrequestById(
       requestHandlerContext,
       Number(itemId),
       azdoOrg,
       azdoProject,
-      commentsUsage === "+"
+      commentsUsage
     )) as AzDevOpsResult;
 
     stream.progress(`PR "${azdoResult?.data?.fields["System.Title"]}" loaded.`);
@@ -68,7 +68,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
         <UserMessage priority={200}>
           {`The pull request to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"]}. Use that information to give better answer for the following user query.` +
             (azdoResult?.comments && azdoResult?.comments?.length > 0
-              ? `Do also regard the comments: ${
+              ? `Do also consider the comments: ${
                   azdoResult?.comments
                     ?.map((comment) => comment.body)
                     .join("\n\n")

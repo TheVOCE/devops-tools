@@ -8,15 +8,21 @@ import { type GitHubResult } from "../GitHubResult";
 
 export function StateFullPrInStream(
   stream: vscode.ChatResponseStream,
-  pullrequest: { title: string; body: string }
+  pullrequest: { title: string; body: string; state: string },
+  comments: string | null = null
 ) {
-  stream.markdown(`🔵PR: **${pullrequest.title}**\n\n`);
+  stream.markdown(`🔵PR [_${pullrequest.state}_]: **${pullrequest.title}**\n\n`);
   stream.markdown(pullrequest.body?.replaceAll("\n", "\n> ") + "");
+  stream.markdown("\n\n");
+  if (comments && comments.length > 0) {
+    stream.markdown(`> **Comments:**\n\n`);
+    stream.markdown(comments.replaceAll("\n", "\n> ") + "");
+  }
   stream.markdown("\n\n----\n\n");
 }
 
 //get issue object from github by its issue id using octokit
-export async function getPullrequestById(
+export async function getGhPullrequestById(
   requestHandlerContext: RequestHandlerContext,
   pull_number: number,
   ghOwner: string = "",

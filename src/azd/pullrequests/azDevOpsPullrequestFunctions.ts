@@ -81,7 +81,7 @@ async function findRepositoryByRemoteUrl(
 }
 
 //get pull request object from Azure DevOps by its PR id
-export async function getPullrequestById(
+export async function getAzdPullrequestById(
   requestHandlerContext: RequestHandlerContext,
   pullRequestId: number,
   azdoOrg: string = "",
