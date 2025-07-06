@@ -76,7 +76,7 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
     id: workItemId,
     fields: {
       "System.Title": `Mock Work Item ${workItemId}`,
-      "System.Description": "This is mock data. Configure Azure DevOps PAT token for real data.",
+      "System.Description": "This is mock data. Sign in with your Microsoft Account or configure Azure DevOps PAT token for real data.",
       "System.State": "Active",
       "System.WorkItemType": "Task"
     },
@@ -114,7 +114,7 @@ export async function getWorkItemAndCommentsById(
       throw new Error(`Work item !${workItemId} not found`);
     }
   } catch (err) {
-    // If API call fails (e.g., no PAT token), use mock data
+    // If API call fails (e.g., no authentication), use mock data
     requestHandlerContext.stream.progress("⚠️ Using mock data - configure Azure DevOps PAT for real data");
     useMockData = true;
     workItem = getMockWorkItem(workItemId, org, project) as WorkItem;
