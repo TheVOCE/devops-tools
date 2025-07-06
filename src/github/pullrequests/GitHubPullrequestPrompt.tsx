@@ -8,7 +8,7 @@ import {
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import {
   getGhPullrequestById as getGhPullrequestById,
-  StateFullPrInStream,
+  StateFullGhPrInStream,
 } from "./gitHubPullrequestFunctions";
 import { parseGitHubValuesFromPrompt } from "../gitHubUtils";
 import type { GitHubResult } from "../GitHubResult";
@@ -44,11 +44,11 @@ export class GitHubPullrequestPrompt extends PromptElement<
           ? ghResult.comments.map((comment: any) => `○ ${comment.body}`).join("\n\n")
           : "";
 
-        StateFullPrInStream(stream, ghResult?.data!, commentsString);
+        StateFullGhPrInStream(stream, ghResult?.data!, commentsString);
       }
       else
       {
-        StateFullPrInStream(stream, ghResult?.data!);
+        StateFullGhPrInStream(stream, ghResult?.data!);
       }
     } 
     else {

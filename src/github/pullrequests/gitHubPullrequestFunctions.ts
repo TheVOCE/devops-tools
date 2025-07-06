@@ -6,7 +6,7 @@ import {
 import { type GitHubComment } from "../GitHubComment";
 import { type GitHubResult } from "../GitHubResult";
 
-export function StateFullPrInStream(
+export function StateFullGhPrInStream(
   stream: vscode.ChatResponseStream,
   pullrequest: { title: string; body: string; state: string },
   comments: string | null = null
