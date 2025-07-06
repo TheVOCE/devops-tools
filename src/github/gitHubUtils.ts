@@ -22,3 +22,19 @@ export function parseGitHubValuesFromPrompt(
   }
   return { ghOwner, ghRepo, itemId, commentsUsage };
 }
+
+/**
+ * Silent version of parseGitHubValuesFromPrompt that doesn't output progress messages
+ * Used for checking if parsing finds valid results without affecting the stream
+ */
+export function parseGitHubValuesFromPromptSilent(
+  request: vscode.ChatRequest
+) {
+  const match = request.prompt.match(issueNumberRegex);
+  const [itemId, commentsUsage] = match ? [match[1], match[2] === '+'] : ["", false];
+
+  const ghMatch = request.prompt.match(ghRepoRegex);
+  const [ghOwner, ghRepo] = ghMatch ? [ghMatch[1], ghMatch[2]] : ["", ""];
+
+  return { ghOwner, ghRepo, itemId, commentsUsage };
+}

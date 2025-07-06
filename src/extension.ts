@@ -5,6 +5,9 @@ import { handleAzDoPullrequestCommand } from "./azd/pullrequests/AzDevOpsPullreq
 import type { RequestHandlerContext } from "./requestHandlerContext.js";
 import { OPEN_URL_COMMAND } from "./consts.js";
 import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequestCommand.js";
+import { parseLLMBasedCommand, hasValidParseResults } from "./llmBasedParser.js";
+import { parseAzDevOpsValuesFromPromptSilent } from "./azd/azDevOpsUtils.js";
+import { parseGitHubValuesFromPromptSilent } from "./github/gitHubUtils.js";
 
 const PARTICIPANT_ID = "voce.devops";
 
@@ -17,6 +20,40 @@ interface IVoceChatResult extends vscode.ChatResult {
   metadata: {
     command: string;
   };
+}
+
+/**
+ * Create a formatted prompt that includes the parsed information in the expected format
+ * so that existing regex parsers can extract the information
+ */
+function createFormattedPrompt(originalPrompt: string, parseResult: any): string {
+  let formattedPrompt = originalPrompt;
+  
+  // Add the item ID in the expected format if not already present
+  if (parseResult.itemId && !originalPrompt.includes(`!${parseResult.itemId}`)) {
+    formattedPrompt += ` !${parseResult.itemId}`;
+  }
+  
+  // Add comments marker if requested
+  if (parseResult.commentsUsage && !originalPrompt.includes('+')) {
+    formattedPrompt = formattedPrompt.replace(`!${parseResult.itemId}`, `!${parseResult.itemId}+`);
+  }
+  
+  // Add Azure DevOps context if provided
+  if (parseResult.azdoOrg && parseResult.azdoProject) {
+    if (!originalPrompt.includes(`azdo:${parseResult.azdoOrg}/${parseResult.azdoProject}`)) {
+      formattedPrompt += ` azdo:${parseResult.azdoOrg}/${parseResult.azdoProject}`;
+    }
+  }
+  
+  // Add GitHub context if provided
+  if (parseResult.ghOwner && parseResult.ghRepo) {
+    if (!originalPrompt.includes(`gh:${parseResult.ghOwner}/${parseResult.ghRepo}`)) {
+      formattedPrompt += ` gh:${parseResult.ghOwner}/${parseResult.ghRepo}`;
+    }
+  }
+  
+  return formattedPrompt;
 }
 
 export function activate(vscontext: vscode.ExtensionContext) {
@@ -73,23 +110,106 @@ export function activate(vscontext: vscode.ExtensionContext) {
       }
     }
     else {
-      // Default handler or response for when no specific command is matched
-      // For example, use the LLM to generate a response based on the prompt
-      try {
-        const messages = [vscode.LanguageModelChatMessage.User(request.prompt)];
-        const chatResponse = await model.sendRequest(messages, {}, token);
-        for await (const fragment of chatResponse.text) {
-          stream.markdown(fragment);
+      // Try to use LLM to parse the user's intent when no command is provided
+      // or when a command is provided but parsing fails
+      let shouldUseLLMFallback = false;
+      let commandToUse = request.command;
+
+      if (!request.command) {
+        // No command provided - use LLM to determine intent
+        shouldUseLLMFallback = true;
+      } else {
+        // Command provided but check if regex parsing finds valid results
+        const azDevOpsParseResult = parseAzDevOpsValuesFromPromptSilent(request);
+        const gitHubParseResult = parseGitHubValuesFromPromptSilent(request);
+        
+        if (!hasValidParseResults(azDevOpsParseResult) && !hasValidParseResults(gitHubParseResult)) {
+          // Regex parsing failed to find required information - use LLM fallback
+          shouldUseLLMFallback = true;
         }
-      } catch (err) {
-        // Handle errors from the language model
-        if (err instanceof vscode.LanguageModelError) {
-          console.log(err.message, err.code, err.cause);
-          stream.markdown(
-            "Sorry, I encountered an issue processing your request."
-          );
+      }
+
+      if (shouldUseLLMFallback) {
+        const llmParseResult = await parseLLMBasedCommand(request.prompt, model, token, stream);
+        
+        if (llmParseResult) {
+          // Create a modified request with the parsed command and update the prompt if needed
+          const modifiedRequest: vscode.ChatRequest = {
+            ...request,
+            command: llmParseResult.command,
+            // Inject the parsed information into the prompt in the expected format
+            prompt: createFormattedPrompt(request.prompt, llmParseResult)
+          };
+
+          const modifiedContext: RequestHandlerContext = {
+            ...requestHandlerContext,
+            request: modifiedRequest
+          };
+
+          // Route to the appropriate handler based on LLM parsing
+          switch (llmParseResult.command) {
+            case "gh-issue":
+              await handleGhIssueCommand(modifiedContext);
+              break;
+            case "gh-pullrequest":
+              await handleGhPullrequestCommand(modifiedContext);
+              break;
+            case "azd-workitem":
+              await handleAzDoWorkItemCommand(modifiedContext);
+              break;
+            case "azd-pullrequest":
+              try {
+                await handleAzDoPullrequestCommand(modifiedContext);
+              } catch (err) {
+                console.error("Error handling azd-pullrequest command:", err);
+                stream.markdown(
+                  "Sorry, an error occurred while processing the Azure DevOps pull request command."
+                );
+              }
+              break;
+            default:
+              stream.markdown("Sorry, I couldn't determine what type of DevOps operation you're looking for.");
+          }
+          
+          commandToUse = llmParseResult.command;
         } else {
-          throw err;
+          // LLM parsing failed - fall back to default behavior
+          try {
+            const messages = [vscode.LanguageModelChatMessage.User(request.prompt)];
+            const chatResponse = await model.sendRequest(messages, {}, token);
+            for await (const fragment of chatResponse.text) {
+              stream.markdown(fragment);
+            }
+          } catch (err) {
+            // Handle errors from the language model
+            if (err instanceof vscode.LanguageModelError) {
+              console.log(err.message, err.code, err.cause);
+              stream.markdown(
+                "Sorry, I encountered an issue processing your request."
+              );
+            } else {
+              throw err;
+            }
+          }
+        }
+      } else {
+        // Regular fallback to default LLM response when parsing succeeds but no specific command
+        try {
+          const messages = [vscode.LanguageModelChatMessage.User(request.prompt)];
+          const chatResponse = await model.sendRequest(messages, {}, token);
+          for await (const fragment of chatResponse.text) {
+            stream.markdown(fragment);
+          }
+        } catch (err) {
+          // Handle errors from the language model
+          if (err instanceof vscode.LanguageModelError) {
+            console.log(err.message, err.code, err.cause);
+            stream.markdown(
+              "Sorry, I encountered an issue processing your request."
+            );
+          } else {
+            throw err;
+          }
         }
       }
     }

@@ -111,7 +111,7 @@
                     },
                     {
                         "name": "azd-workitem",
-                        "description": "get data from Azure DevOps work item using `#<workItemNumber>`. Use `azdo:<org>/<project>` to add Azure DevOps context."
+                        "description": "get data from Azure DevOps work item using `!<workItemNumber>`. Use `azdo:<org>/<project>` to add Azure DevOps context."
                     },
                     {
                         "name": "azd-pullrequest",
