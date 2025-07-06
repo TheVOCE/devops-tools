@@ -1,3 +1,5 @@
+import path from "path";
+import simpleGit from "simple-git";
 import * as vscode from "vscode";
 
 export interface ParsedCommand {
@@ -64,9 +66,11 @@ User: "What's the status of GitHub issue 456 with comments?" -> {"command": "gh-
 User: "Pull request 789 from myorg/myrepo" -> {"command": "gh-pullrequest", "itemId": "789", "ghOwner": "myorg", "ghRepo": "myrepo", "commentsUsage": false, "confidence": 0.8}
 User: "Azure DevOps task 321 in contoso/webapp project with discussion" -> {"command": "azd-workitem", "itemId": "321", "azdoOrg": "contoso", "azdoProject": "webapp", "commentsUsage": true, "confidence": 0.9}`;
 
+    let gitRepoUrl = await getGitRepoUrl();
+
     const messages = [
       vscode.LanguageModelChatMessage.User(systemPrompt),
-      vscode.LanguageModelChatMessage.User(`Parse this request: "${prompt}"`)
+      vscode.LanguageModelChatMessage.User(`Parse this request: "${prompt}. Opened file git repo url: ${gitRepoUrl}"`)
     ];
 
     const chatResponse = await model.sendRequest(messages, {}, token);
@@ -120,6 +124,29 @@ User: "Azure DevOps task 321 in contoso/webapp project with discussion" -> {"com
     console.error("LLM parsing error:", error);
     return null;
   }
+}
+
+async function getGitRepoUrl() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      console.error("No active editor found.");
+      return;
+    }
+    
+  const filePath = editor.document.uri.fsPath;
+  const fileDirectory = path.dirname(filePath);
+
+  console.log("Get GitHub owner and repo name");
+  const git = simpleGit(fileDirectory);
+  const isRepo = await git.checkIsRepo();
+  let repoUrl = "";
+  if (isRepo) {
+    const remotes = await git.getRemotes(true);
+    if (remotes.length > 0) {
+      repoUrl = remotes[0].refs.fetch;
+    }
+  }
+  return repoUrl;
 }
 
 /**
