@@ -41,7 +41,7 @@ export class GitHubPullrequestPrompt extends PromptElement<
       if (echoGHPullRequestComments)
       {
         const commentsString = ghResult?.comments
-          ? ghResult.comments.map((comment: any) => comment.body).join("\n\n")
+          ? ghResult.comments.map((comment: any) => `○ ${comment.body}`).join("\n\n")
           : "";
 
         StateFullPrInStream(stream, ghResult?.data!, commentsString);

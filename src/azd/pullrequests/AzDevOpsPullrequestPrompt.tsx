@@ -43,7 +43,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
       const echoPullRequestComments = config.get("echoAzDPullRequestComments", false) as boolean;
       if (echoPullRequestComments) {
         const commentsString = azdoResult?.comments
-          ? azdoResult.comments.map((comment: any) => comment.body).join("\n\n")
+          ? azdoResult.comments.map((comment: any) => `○ ${comment.body}`).join("\n\n")
           : "";
         
         StateFullAzDPrInStream(stream, {
