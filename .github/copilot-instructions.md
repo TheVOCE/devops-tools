@@ -26,3 +26,10 @@ Refer to that sample for more information about how to create a chat extension:
 ## Functional requirements
 - Don't use # or @ for parsing pull request id's, work item id' or issue id's from users prompt. Stick with ! as prefix and + for retrieving comments.
 - Keep the name "VOCE-DevOps - Vs-cOde Copilot Extension" and don't try to change it
+
+## Repo structure
+- `src/` - contains the source code of the extension
+- 'docs/' - contains the documentation of the extension
+- `README.md` - contains the readme of the extension
+- 'src-tests/' - contains the tests of the extension
+- 'build/' - contains the build scripts of the extension
