@@ -29,3 +29,26 @@ export function parseAzDevOpsValuesFromPrompt(
   }
   return { azdoOrg, azdoProject, itemId, commentsUsage };
 }
+
+/**
+ * Silent version of parseAzDevOpsValuesFromPrompt that doesn't output progress messages
+ * Used for checking if parsing finds valid results without affecting the stream
+ */
+export function parseAzDevOpsValuesFromPromptSilent(
+  request: vscode.ChatRequest
+) {
+  const workItemMatch = request.prompt.match(workItemNumberRegex);
+  
+  let itemId = "";
+  let commentsUsage = false;
+  
+  if (workItemMatch) {
+    itemId = workItemMatch[1];
+    commentsUsage = workItemMatch[2] === "+";
+  } 
+
+  const azdoMatch = request.prompt.match(azdoOrgProjectRegex);
+  const [azdoOrg, azdoProject] = azdoMatch ? [azdoMatch[1], azdoMatch[2]] : ["", ""];
+
+  return { azdoOrg, azdoProject, itemId, commentsUsage };
+}
