@@ -80,7 +80,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The pull request to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"]}. Use that information to give better answer for the following user query.` +
+          {`The Azure DevOps pull request to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"]}. Use that information to give better answer for the following user query.` +
             (azdoResult?.comments && azdoResult?.comments?.length > 0
               ? `Do also consider the comments: ${
                   azdoResult?.comments

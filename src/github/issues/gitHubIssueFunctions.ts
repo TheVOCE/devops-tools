@@ -4,7 +4,7 @@ import { determineGhOwnerAndRepoToUse } from "../gitHub";
 import { type GitHubComment } from "../GitHubComment";
 import { type GitHubResult } from "../GitHubResult";
 
-export function StateFullIssueInStream(
+export function StateFullGHIssueInStream(
   stream: vscode.ChatResponseStream,
   issue: { title: string; body: string },
   comments: GitHubComment[]

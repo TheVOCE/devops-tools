@@ -7,7 +7,7 @@ import {
 } from "@vscode/prompt-tsx";
 import {
   getIssueAndCommentsById,
-  StateFullIssueInStream,
+  StateFullGHIssueInStream,
 } from "./gitHubIssueFunctions";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import type { GitHubResult } from "../GitHubResult";
@@ -39,10 +39,10 @@ export class GitHubIssuesPrompt extends PromptElement<
 
     // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
-    const echoFullIssue = config.get("echoFullIssue", false) as boolean;
-    const echoIssueComments = config.get("echoIssueComments", false) as boolean;
+    const echoFullIssue = config.get("echoFullGHIssue", false) as boolean;
+    const echoIssueComments = config.get("echoGHIssueComments", false) as boolean;
     if (echoFullIssue) {
-      StateFullIssueInStream(
+      StateFullGHIssueInStream(
         stream,
         ghResult?.data!,
         echoIssueComments ? ghResult?.comments ?? [] : []

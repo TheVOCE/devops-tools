@@ -36,7 +36,7 @@ export class GitHubPullrequestPrompt extends PromptElement<
 
     const config = vscode.workspace.getConfiguration("voce");
     const echoFullGHPullRequest = config.get("echoFullGHPullRequest", false) as boolean;
-    const echoGHPullRequestComments = config.get("echoGhPullRequestComments", false) as boolean;
+    const echoGHPullRequestComments = config.get("echoGHPullRequestComments", false) as boolean;
     if (echoFullGHPullRequest) {
       if (echoGHPullRequestComments)
       {

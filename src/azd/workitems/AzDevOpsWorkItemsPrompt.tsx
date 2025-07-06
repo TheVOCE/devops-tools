@@ -39,8 +39,8 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
 
     // Access vscode settings
     const config = vscode.workspace.getConfiguration("voce");
-    const echoFullWorkItem = config.get("echoFullWorkItem", false) as boolean;
-    const echoWorkItemComments = config.get("echoWorkItemComments", false) as boolean;
+    const echoFullWorkItem = config.get("echoFullAzDWorkItem", false) as boolean;
+    const echoWorkItemComments = config.get("echoAzDWorkItemComments", false) as boolean;
     if (echoFullWorkItem) {
       StateFullWorkItemInStream(
         stream,
