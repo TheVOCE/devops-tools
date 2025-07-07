@@ -2,9 +2,9 @@
  * Simple validation script to check that our implementation functions are working
  */
 
-import { hasValidParseResults } from "../llmBasedParser";
-import { parseAzDevOpsValuesFromPromptSilent } from "../azd/azDevOpsUtils";
-import { parseGitHubValuesFromPromptSilent } from "../github/gitHubUtils";
+import { hasValidParseResults } from "../src/llmBasedParser";
+import { parseAzDevOpsValuesFromPromptSilent } from "../src/azd/azDevOpsUtils";
+import { parseGitHubValuesFromPromptSilent } from "../src/github/gitHubUtils";
 
 console.log("=== Basic Functionality Test ===\n");
 
