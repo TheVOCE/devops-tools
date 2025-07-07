@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runTests = runTests;
 const vscode = __importStar(require("vscode"));
-const llmBasedParser_1 = require("../llmBasedParser");
+const llmBasedParser_1 = require("../src/llmBasedParser");
 /**
  * Manual test for LLM-based parsing functionality
  * This is not an automated test but a validation script to verify the implementation
