@@ -3,7 +3,7 @@
  * Simple validation script to check that our implementation functions are working
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const llmBasedParser_1 = require("../src/llmBasedParser");
+const llmBasedParser_1 = require("../llmBasedParser");
 const azDevOpsUtils_1 = require("../azd/azDevOpsUtils");
 const gitHubUtils_1 = require("../github/gitHubUtils");
 console.log("=== Basic Functionality Test ===\n");
