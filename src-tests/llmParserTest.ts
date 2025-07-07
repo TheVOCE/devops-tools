@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { parseLLMBasedCommand, hasValidParseResults, ParsedCommand } from "../llmBasedParser";
+import { parseLLMBasedCommand, hasValidParseResults, ParsedCommand } from "../src/llmBasedParser";
 
 /**
  * Manual test for LLM-based parsing functionality
