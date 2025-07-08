@@ -90,6 +90,11 @@
                     "type": "string",
                     "default": "",
                     "description": "Personal Access Token for Azure DevOps API access. Required for work item functionality."
+                },
+                "voce.preferredChatModel": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Preferred GitHub Copilot model family for general chat responses (e.g., 'gpt-4o', 'gpt-4'). Leave empty to use default model."
                 }
             }
         },
