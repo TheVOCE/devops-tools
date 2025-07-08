@@ -69,6 +69,17 @@ The AI will automatically:
 
 ## Setup
 
+### GitHub Copilot Model Configuration (Optional)
+
+You can configure your preferred GitHub Copilot model for general chat responses:
+
+1. Open VS Code settings (File > Preferences > Settings)
+2. Search for "voce"
+3. Set `voce.preferredChatModel` to your preferred model (e.g., "gpt-4o", "gpt-4")
+4. Leave empty to use the default model
+
+**Note**: The extension automatically uses the default (fast and cheap) model for parsing operations to understand your intent, regardless of this setting.
+
 ### Azure DevOps (Optional)
 
 For real Azure DevOps data, configure a Personal Access Token:
