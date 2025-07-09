@@ -11,10 +11,81 @@ import { parseGitHubValuesFromPromptSilent } from "./github/gitHubUtils.js";
 
 const PARTICIPANT_ID = "voce.devops";
 
-// const MODEL_SELECTOR: vscode.LanguageModelChatSelector = {
-//   vendor: "copilot",
-//   family: "gpt-4o",
-// };
+/**
+ * Get the default GitHub Copilot model for LLM parsing operations
+ * This prioritizes fast and cheap models for basic parsing tasks
+ */
+export async function getDefaultCopilotModel(): Promise<vscode.LanguageModelChat | null> {
+  try {
+    // First try to get the default Copilot model (fast and cheap)
+    const [model] = await vscode.lm.selectChatModels({ vendor: "copilot" });
+    console.log("Selected default Copilot model for LLM parsing:", model?.family || "unknown");
+    return model || null;
+  } catch (err) {
+    console.error("Error selecting default Copilot model:", err);
+    return null;
+  }
+}
+
+/**
+ * Get the user's preferred model for general chat responses
+ * Falls back to default model if user preference is not set or unavailable
+ */
+export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat | null> {
+  try {
+    // Get user's preferred model from configuration
+    const config = vscode.workspace.getConfiguration("voce");
+    const preferredModel = config.get<string>("preferredChatModel");
+    const preferredVendor = config.get<string>("preferredChatVendor");
+    
+    // Try user's preferred vendor and model combination first
+    if ((preferredVendor && preferredVendor.trim() !== "") || (preferredModel && preferredModel.trim() !== "")) {
+      try {
+        const modelOptions: any = {};
+        
+        // Use user's preferred vendor or default to copilot
+        modelOptions.vendor = (preferredVendor && preferredVendor.trim() !== "") ? preferredVendor : "copilot";
+        
+        // Add family if specified
+        if (preferredModel && preferredModel.trim() !== "") {
+          modelOptions.family = preferredModel;
+        }
+        
+        console.log(`Trying user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
+        const [model] = await vscode.lm.selectChatModels(modelOptions);
+        if (model) {
+          console.log(`Using user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
+          return model;
+        }
+      } catch (err) {
+        console.log(`User preferred model '${preferredVendor || 'copilot'}/${preferredModel || 'default'}' not available, trying fallbacks`);
+      }
+      
+      // If user specified both vendor and family but it failed, try default vendor with user's family
+      if (preferredVendor && preferredVendor !== "copilot" && preferredModel && preferredModel.trim() !== "") {
+        try {
+          const [model] = await vscode.lm.selectChatModels({
+            vendor: "copilot",
+            family: preferredModel,
+          });
+          console.log(`Trying to fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
+          if (model) {
+            console.log(`Fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
+            return model;
+          }
+        } catch (err) {
+          console.log(`Fallback with default vendor and user family '${preferredModel}' also failed`);
+        }
+      }
+    }
+    
+    // Fall back to default model
+    return await getDefaultCopilotModel();
+  } catch (err) {
+    console.error("Error selecting user preferred model:", err);
+    return null;
+  }
+}
 
 interface IVoceChatResult extends vscode.ChatResult {
   metadata: {
@@ -63,20 +134,11 @@ export function activate(vscontext: vscode.ExtensionContext) {
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken
   ): Promise<IVoceChatResult> => {
-    // Ensure a model is selected (prefer gpt-4o, fallback if needed)
-    let model;
-    try {
-      [model] = await vscode.lm.selectChatModels({
-        vendor: "copilot",
-        family: "gpt-4.1",
-      });
-    } catch (err) {
-      // Fallback or handle error if gpt-4o is not available
-      [model] = await vscode.lm.selectChatModels({ vendor: "copilot" });
-      if (!model) {
-        stream.markdown("Error: Could not select a language model.");
-        return { metadata: { command: "error" } };
-      }
+    // Get the user's preferred model for general chat responses
+    const userPreferredModel = await getUserPreferredModel();
+    if (!userPreferredModel) {
+      stream.markdown("Error: Could not select a language model.");
+      return { metadata: { command: "error" } };
     }
 
     const requestHandlerContext: RequestHandlerContext = {
@@ -85,7 +147,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
       context,
       stream,
       token,
-      model,
+      model: userPreferredModel,
     };
     // To talk to an LLM in your subcommand handler implementation, your
     // extension can use VS Code's `requestChatAccess` API to access the Copilot API.
@@ -130,7 +192,14 @@ export function activate(vscontext: vscode.ExtensionContext) {
       }
 
       if (shouldUseLLMFallback) {
-        const llmParseResult = await parseLLMBasedCommand(request.prompt, model, token, stream);
+        // Use default model for LLM parsing (fast and cheap)
+        const defaultModel = await getDefaultCopilotModel();
+        if (!defaultModel) {
+          stream.markdown("Error: Could not select default model for parsing.");
+          return { metadata: { command: "error" } };
+        }
+        
+        const llmParseResult = await parseLLMBasedCommand(request.prompt, defaultModel, token, stream);
         
         if (llmParseResult) {
           // Create a modified request with the parsed command and update the prompt if needed
@@ -173,10 +242,10 @@ export function activate(vscontext: vscode.ExtensionContext) {
           
           commandToUse = llmParseResult.command;
         } else {
-          // LLM parsing failed - fall back to default behavior
+          // LLM parsing failed - fall back to default behavior using user's preferred model
           try {
             const messages = [vscode.LanguageModelChatMessage.User(request.prompt)];
-            const chatResponse = await model.sendRequest(messages, {}, token);
+            const chatResponse = await userPreferredModel.sendRequest(messages, {}, token);
             for await (const fragment of chatResponse.text) {
               stream.markdown(fragment);
             }
@@ -193,10 +262,10 @@ export function activate(vscontext: vscode.ExtensionContext) {
           }
         }
       } else {
-        // Regular fallback to default LLM response when parsing succeeds but no specific command
+        // Regular fallback to default LLM response when parsing succeeds but no specific command - use user's preferred model
         try {
           const messages = [vscode.LanguageModelChatMessage.User(request.prompt)];
-          const chatResponse = await model.sendRequest(messages, {}, token);
+          const chatResponse = await userPreferredModel.sendRequest(messages, {}, token);
           for await (const fragment of chatResponse.text) {
             stream.markdown(fragment);
           }
