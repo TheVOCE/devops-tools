@@ -37,6 +37,7 @@ export function parseAzDevOpsValuesFromPrompt(
 export function parseAzDevOpsValuesFromPromptSilent(
   request: vscode.ChatRequest
 ) {
+  console.log("Parsing Azure DevOps values from prompt silently...");
   const workItemMatch = request.prompt.match(workItemNumberRegex);
   
   let itemId = "";

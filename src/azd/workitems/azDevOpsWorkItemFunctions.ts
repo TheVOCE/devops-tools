@@ -14,7 +14,7 @@ export function StateFullWorkItemInStream(
 ) {
   const title = workItem.fields["System.Title"];
   const description = workItem.fields["System.Description"] || "";
-  
+
   stream.markdown(`🔷Work Item: **${title}**\n\n`);
   stream.markdown(description.replaceAll("\n", "\n> ") + "");
   if (comments?.length > 0) {
@@ -30,11 +30,23 @@ export function StateFullWorkItemInStream(
 async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
   try {
     // First try to use VS Code Microsoft Account authentication
-    const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
-      createIfNone: false, // Don't prompt user if no session exists
-      clearSessionPreference: false
-    });
-    
+    // 499b84ac-1321-427f-aa17-267ca6975798/.default
+    // 499b84ac-1321-427f-aa17-267ca6975798/user_impersonation
+    // https://app.vssps.visualstudio.com
+    // https://stackoverflow.com/questions/56355274/getting-oauth-tokens-for-azure-devops-api-consumption
+    const session = await vscode.authentication.getSession(
+      'microsoft',
+      [
+        'https://app.vssps.visualstudio.com/user_impersonation', // Azure DevOps API scope
+        'offline_access',
+        'openid',
+        'profile'
+      ],
+      {
+        createIfNone: true
+      }
+    );
+
     if (session) {
       // Use Microsoft authentication token
       const authHandler = azdev.getBearerHandler(session.accessToken);
@@ -48,7 +60,7 @@ async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
 
   // Fallback to Personal Access Token
   const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
-  
+
   if (!token) {
     // If no token is configured, provide helpful error message
     const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in VS Code settings to enable Azure DevOps integration.";
@@ -99,17 +111,17 @@ export async function getWorkItemAndCommentsById(
   );
 
   const orgUrl = `https://dev.azure.com/${org}`;
-  
+
   let workItem: WorkItem;
   let useMockData = false;
-  
+
   try {
     const connection = await getAzureDevOpsConnection(orgUrl);
     const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
-    
+
     // Get work item with all fields
     workItem = await witApi.getWorkItem(workItemId, undefined, undefined, WorkItemExpand.All);
-    
+
     if (!workItem) {
       throw new Error(`Work item !${workItemId} not found`);
     }
@@ -126,7 +138,7 @@ export async function getWorkItemAndCommentsById(
       try {
         const connection = await getAzureDevOpsConnection(orgUrl);
         const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
-        
+
         // Get work item comments
         const commentsResult = await witApi.getComments(project, workItemId);
         if (commentsResult && commentsResult.comments) {
