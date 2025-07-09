@@ -19,6 +19,7 @@ export async function getDefaultCopilotModel(): Promise<vscode.LanguageModelChat
   try {
     // First try to get the default Copilot model (fast and cheap)
     const [model] = await vscode.lm.selectChatModels({ vendor: "copilot" });
+    console.log("Selected default Copilot model for LLM parsing:", model?.family || "unknown");
     return model || null;
   } catch (err) {
     console.error("Error selecting default Copilot model:", err);
@@ -50,8 +51,10 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
           modelOptions.family = preferredModel;
         }
         
+        console.log(`Trying user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
         const [model] = await vscode.lm.selectChatModels(modelOptions);
         if (model) {
+          console.log(`Using user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
           return model;
         }
       } catch (err) {
@@ -65,6 +68,7 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
             vendor: "copilot",
             family: preferredModel,
           });
+          console.log(`Trying to fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
           if (model) {
             console.log(`Fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
             return model;
