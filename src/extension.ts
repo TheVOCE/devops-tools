@@ -35,19 +35,43 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
     // Get user's preferred model from configuration
     const config = vscode.workspace.getConfiguration("voce");
     const preferredModel = config.get<string>("preferredChatModel");
+    const preferredVendor = config.get<string>("preferredChatVendor");
     
-    if (preferredModel && preferredModel.trim() !== "") {
-      // Try to select the user's preferred model
+    // Try user's preferred vendor and model combination first
+    if ((preferredVendor && preferredVendor.trim() !== "") || (preferredModel && preferredModel.trim() !== "")) {
       try {
-        const [model] = await vscode.lm.selectChatModels({
-          vendor: "copilot",
-          family: preferredModel,
-        });
+        const modelOptions: any = {};
+        
+        // Use user's preferred vendor or default to copilot
+        modelOptions.vendor = (preferredVendor && preferredVendor.trim() !== "") ? preferredVendor : "copilot";
+        
+        // Add family if specified
+        if (preferredModel && preferredModel.trim() !== "") {
+          modelOptions.family = preferredModel;
+        }
+        
+        const [model] = await vscode.lm.selectChatModels(modelOptions);
         if (model) {
           return model;
         }
       } catch (err) {
-        console.log(`User preferred model '${preferredModel}' not available, falling back to default`);
+        console.log(`User preferred model '${preferredVendor || 'copilot'}/${preferredModel || 'default'}' not available, trying fallbacks`);
+      }
+      
+      // If user specified both vendor and family but it failed, try default vendor with user's family
+      if (preferredVendor && preferredVendor !== "copilot" && preferredModel && preferredModel.trim() !== "") {
+        try {
+          const [model] = await vscode.lm.selectChatModels({
+            vendor: "copilot",
+            family: preferredModel,
+          });
+          if (model) {
+            console.log(`Fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
+            return model;
+          }
+        } catch (err) {
+          console.log(`Fallback with default vendor and user family '${preferredModel}' also failed`);
+        }
       }
     }
     

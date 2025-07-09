@@ -95,6 +95,11 @@
                     "type": "string",
                     "default": "",
                     "description": "Preferred GitHub Copilot model family for general chat responses (e.g., 'gpt-4o', 'gpt-4'). Leave empty to use default model."
+                },
+                "voce.preferredChatVendor": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Preferred model vendor for general chat responses (e.g., 'copilot', 'openai'). Leave empty to use default vendor 'copilot'."
                 }
             }
         },

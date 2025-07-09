@@ -71,14 +71,20 @@ The AI will automatically:
 
 ### GitHub Copilot Model Configuration (Optional)
 
-You can configure your preferred GitHub Copilot model for general chat responses:
+You can configure your preferred model vendor and family for general chat responses:
 
 1. Open VS Code settings (File > Preferences > Settings)
 2. Search for "voce"
-3. Set `voce.preferredChatModel` to your preferred model (e.g., "gpt-4o", "gpt-4")
-4. Leave empty to use the default model
+3. Set `voce.preferredChatModel` to your preferred model family (e.g., "gpt-4o", "gpt-4")
+4. Set `voce.preferredChatVendor` to your preferred vendor (e.g., "copilot", "openai")
+5. Leave both empty to use the default model
 
-**Note**: The extension automatically uses the default (fast and cheap) model for parsing operations to understand your intent, regardless of this setting.
+**Examples:**
+- Default: Both settings empty → Uses default Copilot model
+- Family only: `voce.preferredChatModel: "gpt-4o"` → Uses Copilot vendor with gpt-4o family
+- Both specified: `voce.preferredChatVendor: "openai"` + `voce.preferredChatModel: "gpt-4"` → Uses OpenAI vendor with gpt-4 family
+
+**Note**: The extension automatically uses the default (fast and cheap) model for parsing operations to understand your intent, regardless of these settings.
 
 ### Azure DevOps (Optional)
 
