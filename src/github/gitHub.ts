@@ -2,46 +2,47 @@ import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
+import { logInfo, logError } from "../logging.js";
 
 export async function getGitHubOwnerAndRepo() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    console.error("No active editor found.");
+    logError("No active editor found.");
     return;
   }
 
   const filePath = editor.document.uri.fsPath;
   const fileDirectory = path.dirname(filePath);
 
-  console.log("Get GitHub owner and repo name");
+  logInfo("Get GitHub owner and repo name");
   const git = simpleGit(fileDirectory);
 
   try {
     const isRepo = await git.checkIsRepo();
     if (!isRepo) {
-      console.log(`No Git repository found in ${fileDirectory}`);
+      logInfo(`No Git repository found in ${fileDirectory}`);
       return;
     }
 
     const remotes = await git.getRemotes(true);
     if (remotes.length === 0) {
-      console.error("No remote repository found.");
+      logError("No remote repository found.");
       return;
     }
 
     const remoteUrl = remotes[0].refs.fetch;
-    console.log(`Remote URL: ${remoteUrl}`);
+    logInfo(`Remote URL: ${remoteUrl}`);
 
     const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
     if (!match) {
-      console.error("Remote repository is not a GitHub repository.");
+      logError("Remote repository is not a GitHub repository.");
       return;
     }
 
     const [owner, repo] = match[1].split("/");
     return { owner, repo };
   } catch (err) {
-    console.error(err + " It looks like there is no git context");
+    logError(`${err} It looks like there is no git context`);
   }
 }
 
@@ -95,6 +96,6 @@ export async function determineGhOwnerAndRepoToUse(
     }
   }
 
-  console.log(`Owner: ${owner}, Repo: ${repo}`);
+  logInfo(`Owner: ${owner}, Repo: ${repo}`);
   return { octokit, owner, repo };
 }

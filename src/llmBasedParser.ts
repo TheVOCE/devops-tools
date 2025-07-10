@@ -1,6 +1,7 @@
 import path from "path";
 import simpleGit from "simple-git";
 import * as vscode from "vscode";
+import { logInfo } from "./logging.js";
 
 export interface ParsedCommand {
   command: string;
@@ -136,7 +137,7 @@ async function getGitRepoUrl() {
   const filePath = editor.document.uri.fsPath;
   const fileDirectory = path.dirname(filePath);
 
-  console.log("Get GitHub owner and repo name");
+  logInfo("Get GitHub owner and repo name");
   const git = simpleGit(fileDirectory);
   const isRepo = await git.checkIsRepo();
   let repoUrl = "";

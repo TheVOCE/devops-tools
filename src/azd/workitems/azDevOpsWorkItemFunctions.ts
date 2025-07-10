@@ -6,6 +6,7 @@ import type { RequestHandlerContext } from "../../requestHandlerContext";
 import { determineAzDoOrgAndProjectToUse } from "../azd";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
+import { logInfo } from "../../logging.js";
 
 export function StateFullWorkItemInStream(
   stream: vscode.ChatResponseStream,
@@ -34,6 +35,10 @@ async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
   if (!token) {
     // If no token is configured, provide helpful error message
     const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
+    
+    // Log to output channel for diagnostic purposes
+    logInfo("Microsoft authentication not available, falling back to PAT token configuration required");
+    
     vscode.window.showWarningMessage(message, "Open Settings").then(selection => {
       if (selection === "Open Settings") {
         vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");

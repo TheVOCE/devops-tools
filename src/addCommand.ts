@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { RequestHandlerContext } from "./requestHandlerContext";
+import { logError } from "./logging.js";
 
 export type CommandHandlerFunc<T> = (
   requestHandlerContext: RequestHandlerContext
@@ -28,7 +29,7 @@ function handleError(err: any, stream: vscode.ChatResponseStream): void {
   // - user consent not given
   // - quote limits exceeded
   if (err instanceof vscode.LanguageModelError) {
-    console.log(err.message, err.code, err.cause);
+    logError(`Language model error: ${err.message}, code: ${err.code}, cause: ${err.cause}`);
     if (err.cause instanceof Error && err.cause.message.includes("off_topic")) {
       stream.markdown(
         vscode.l10n.t(
