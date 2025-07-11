@@ -27,7 +27,7 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     
     // Check if this is a title-based search by looking for searchQuery in the user prompt
     // This will be set by the LLM parser when it detects a title search intent
-    const searchQueryMatch = this.props.userPrompt.match(/searchQuery:(.+?)(?:\s|$)/);
+    const searchQueryMatch = this.props.userPrompt.match(/searchQuery:(.+)(?:\s|$)/);
     const isSearchByTitle = searchQueryMatch !== null;
     
     if (isSearchByTitle) {
