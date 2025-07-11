@@ -3,7 +3,6 @@ import * as path from "path";
 import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
-import { log } from "console";
 
 export async function getAzDevOpsOrgAndProject() {
   const editor = vscode.window.activeTextEditor;
@@ -34,7 +33,7 @@ export async function getAzDevOpsOrgAndProject() {
     if (remoteUrl) {
       logInfo(`Remote URL: ${remoteUrl}`);
     }
-    
+
     // Azure DevOps remote URL patterns:
     // https://dev.azure.com/{organization}/{project}/_git/{repo}
     // or
