@@ -49,7 +49,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
       );
     } else {
       stream.markdown(
-        `🔷Work Item [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
+        `🔷Work Item [_${azdoResult.data?.fields["System.WorkItemType"] }] [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
       );
     }
 
@@ -75,7 +75,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The work item to work on has the title: "${azdoResult?.data?.fields["System.Title"]}" and the description: ${azdoResult?.data?.fields["System.Description"] || "No description"}. Use that information to give better answer for the following user query.` +
+          {`The work item to work on has the title: "${azdoResult?.data?.fields["System.Title"]}", work item type "${azdoResult?.data?.fields["System.WorkItemType"]}"  and the description: ${azdoResult?.data?.fields["System.Description"] || "No description"}. Use that information to give better answer for the following user query.` +
             (azdoResult?.comments && azdoResult?.comments?.length > 0
               ? `Do also regard the comments: ${
                   azdoResult?.comments
