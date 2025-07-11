@@ -49,7 +49,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
       );
     } else {
       stream.markdown(
-        `🔷Work Item [_${azdoResult.data?.fields["System.WorkItemType"] }] [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
+        `🔷Work Item [_${azdoResult.data?.fields["System.WorkItemType"]}_] [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
       );
     }
 
