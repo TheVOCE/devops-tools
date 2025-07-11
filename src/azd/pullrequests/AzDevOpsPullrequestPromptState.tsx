@@ -2,5 +2,8 @@ import type { AzDevOpsResult } from "../AzDevOpsResult";
 
 
 export interface AzDevOpsPullrequestPromptState {
-  azdoResult: AzDevOpsResult;
+  azdoResult?: AzDevOpsResult;
+  azdoResults?: AzDevOpsResult[];
+  searchType?: 'id' | 'title';
+  searchQuery?: string;
 }
