@@ -7,13 +7,14 @@ This Visual Studio Code Extension enriches Copilot with data from GitHub issues/
 ### GitHub Integration
 
 - **Issues**: Reference with `/gh-issue !<issueNumber>`
-- **Pull Requests**: Reference with `/gh-pullrequest`
+- **Pull Requests**: Reference with `/gh-pullrequest !<prNumber>` or search by title
 - **Comments**: Add `+` for comments (e.g., `!1234+`)
 - **Cross-repo**: Use `gh:<owner>/<repo>` syntax
 
 ### Azure DevOps Integration
 
 - **Work Items**: Reference with `/azd-workitem !<workItemNumber>`
+- **Pull Requests**: Reference with `/azd-pullrequest !<prNumber>` or search by title
 - **Comments**: Add `+` for comments (e.g., `!1234+`)
 - **Cross-org**: Use `azdo:<org>/<project>` syntax
 - **Real API**: Uses Azure DevOps Node.js API with PAT authentication
@@ -58,14 +59,46 @@ The AI parser works as a fallback when:
 @voce What's the status of GitHub issue 456 with all comments?
 @voce Tell me about pull request 789 from microsoft/vscode
 @voce Summarize Azure DevOps task 321 with discussion from contoso/webapp
+@voce Find pull requests about authentication
+@voce Search for PRs containing bugfix
+@voce Show me PRs with security in the title
+@voce Find Azure DevOps PRs about performance optimization
+@voce Search for pull requests with bug fix in Azure DevOps
 ```
 
 The AI will automatically:
 
 - Detect the correct command type
-- Extract item IDs
+- Extract item IDs for specific references
+- **🆕 Search pull requests by title content** (contains search)
 - Understand when you want comments/discussion
 - Parse repository or project context
+
+### 🔍 Pull Request Title Search
+
+**New Feature**: You can now search for pull requests by title content instead of just by ID across both GitHub and Azure DevOps!
+
+#### Examples:
+
+```text
+@voce Find pull requests about authentication
+@voce Search for PRs containing bug fix  
+@voce Show me PRs with security in the title
+@voce Look for pull requests about feature implementation
+```
+
+#### How it works:
+- **Title Search**: Searches PR titles for containing the specified keywords (case-insensitive)
+- **Multiple Results**: Shows up to 10 matching PRs with summaries and direct links
+- **Backward Compatible**: Traditional `!<number>` ID searches continue to work unchanged
+- **Comments Support**: Add "with comments" to include PR review comments
+- **Cross-Platform**: Works with both GitHub and Azure DevOps repositories
+
+#### Search Results Display:
+- PR number, title, and status (open/closed)
+- Brief description preview
+- Direct links to open each PR in browser
+- Sorted by most recently updated
 
 ## Setup
 

@@ -101,13 +101,15 @@ interface IVoceChatResult extends vscode.ChatResult {
 function createFormattedPrompt(originalPrompt: string, parseResult: any): string {
   let formattedPrompt = originalPrompt;
   
-  // Add the item ID in the expected format if not already present
-  if (parseResult.itemId && !originalPrompt.includes(`!${parseResult.itemId}`)) {
+  // For ID-based searches, add the item ID in the expected format if not already present
+  if (parseResult.searchType === 'id' && parseResult.itemId && !originalPrompt.includes(`!${parseResult.itemId}`)) {
     formattedPrompt += ` !${parseResult.itemId}`;
   }
   
+  // For title-based searches, we don't need to add the !ID format since we'll handle it differently
+  
   // Add comments marker if requested
-  if (parseResult.commentsUsage && !originalPrompt.includes('+')) {
+  if (parseResult.commentsUsage && parseResult.itemId && !originalPrompt.includes('+')) {
     formattedPrompt = formattedPrompt.replace(`!${parseResult.itemId}`, `!${parseResult.itemId}+`);
   }
   
@@ -210,8 +212,10 @@ export function activate(vscontext: vscode.ExtensionContext) {
           const modifiedRequest: vscode.ChatRequest = {
             ...request,
             command: llmParseResult.command,
-            // Inject the parsed information into the prompt in the expected format
-            prompt: createFormattedPrompt(request.prompt, llmParseResult)
+            // For title searches, add the search query to the prompt, for ID searches use formatted prompt
+            prompt: llmParseResult.searchType === 'title' 
+              ? `${request.prompt} searchQuery:${llmParseResult.searchQuery || ''}`
+              : createFormattedPrompt(request.prompt, llmParseResult)
           };
 
           const modifiedContext: RequestHandlerContext = {
