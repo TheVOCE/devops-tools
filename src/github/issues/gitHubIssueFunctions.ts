@@ -56,21 +56,15 @@ export async function searchGhIssuesByTitle(
 
   try {
     // Search for open and closed issues that contain the search query in the title
-    const searchResults = await octokit.rest.issues.listForRepo({
-      owner,
-      repo,
-      state: 'all', // Include both open and closed issues
+    const searchResults = await octokit.rest.search.issuesAndPullRequests({
+      q: `repo:${owner}/${repo} ${searchQuery} in:title`,
       sort: 'updated',
-      direction: 'desc',
-      per_page: 100 // Get more results to filter from
+      order: 'desc',
+      per_page: 10 // Limit to 10 results to avoid overwhelming the user
     });
 
-    // Filter issues that contain the search query in the title (case-insensitive)
-    // and exclude pull requests (GitHub's API returns PRs in issues endpoint)
-    const matchingIssues = searchResults.data.filter(issue => 
-      issue.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-      !issue.pull_request // Exclude pull requests
-    ).slice(0, 10); // Limit to 10 results to avoid overwhelming the user
+    // Filter out pull requests (search API returns both issues and PRs)
+    const matchingIssues = searchResults.data.items.filter(issue => !issue.pull_request);
 
     if (matchingIssues.length === 0) {
       throw new Error(`No issues found with title containing "${searchQuery}" in repo '${repo}'.`);
