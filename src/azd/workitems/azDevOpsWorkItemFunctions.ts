@@ -32,6 +32,31 @@ export function StateFullWorkItemInStream(
   stream.markdown("\n\n----\n\n");
 }
 
+export function StateMultipleWorkItemsInStream(
+  stream: vscode.ChatResponseStream,
+  workItems: Array<{ id: number; fields: { [key: string]: any }; url: string }>,
+  searchQuery: string
+) {
+  stream.markdown(`🔍 Found ${workItems.length} work item${workItems.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
+  
+  workItems.forEach((workItem, index) => {
+    const title = workItem.fields["System.Title"] || "Untitled";
+    const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
+    const state = workItem.fields["System.State"] || "Unknown";
+    const description = workItem.fields["System.Description"] || "";
+    
+    stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
+    // Show first 200 characters of description
+    if (description && description.length > 0) {
+      const truncatedDescription = description.length > 200 ? description.substring(0, 200) + "..." : description;
+      stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
+    }
+    stream.markdown(`   🔗 [View Work Item #${workItem.id}](${workItem.url})\n\n`);
+  });
+  
+  stream.markdown("---\n\n");
+}
+
 // Fallback function to provide mock data when API is not available
 function getMockWorkItem(workItemId: number, org: string, project: string) {
   return {
@@ -44,6 +69,102 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
     },
     url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
   };
+}
+
+//search work items by title (contains search)
+export async function searchAzdWorkItemsByTitle(
+  requestHandlerContext: RequestHandlerContext,
+  searchQuery: string,
+  azdoOrg: string = "",
+  azdoProject: string = "",
+  withComments = false
+): Promise<AzDevOpsResult[]> {
+  const { org, project } = await determineAzDoOrgAndProjectToUse(
+    azdoOrg,
+    azdoProject,
+    requestHandlerContext
+  );
+
+  const orgUrl = `https://dev.azure.com/${org}`;
+  let useMockData = false;
+  
+  try {
+    const connection = await getAzureDevOpsConnection(orgUrl);
+    const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
+    
+    // Use WIQL (Work Item Query Language) to search for work items by title
+    const wiql = {
+      query: `SELECT [System.Id], [System.Title], [System.Description], [System.WorkItemType], [System.State] 
+              FROM WorkItems 
+              WHERE [System.TeamProject] = '${project}' 
+              AND [System.Title] CONTAINS '${searchQuery.replace(/'/g, "''")}' 
+              ORDER BY [System.ChangedDate] DESC`
+    };
+    
+    const queryResult = await witApi.queryByWiql(wiql, { projectId: project, project });
+    
+    if (!queryResult.workItems || queryResult.workItems.length === 0) {
+      throw new Error(`No work items found with title containing "${searchQuery}" in project '${project}'.`);
+    }
+
+    // Limit to 10 results to avoid overwhelming the user
+    const limitedWorkItems = queryResult.workItems.slice(0, 10);
+    
+    // Get full work item details for each result
+    const workItemIds = limitedWorkItems.map(wi => wi.id!);
+    const fullWorkItems = await witApi.getWorkItems(workItemIds, undefined, undefined, WorkItemExpand.All);
+
+    // Convert to AzDevOpsResult array
+    const results: AzDevOpsResult[] = [];
+    for (const workItem of fullWorkItems) {
+      if (!workItem.id) {
+        continue;
+      }
+      
+      let comments: AzDevOpsComment[] = [];
+      if (withComments) {
+        try {
+          // Get work item comments
+          const commentsResult = await witApi.getComments(project, workItem.id);
+          if (commentsResult && commentsResult.comments) {
+            comments = commentsResult.comments.map((comment: Comment) => ({
+              id: comment.id || 0,
+              url: comment.url || "",
+              body: comment.text || ""
+            }));
+          }
+        } catch (err) {
+          // If comments fail for one work item, continue with others
+          console.warn(`Could not get comments for work item #${workItem.id}: ${err}`);
+        }
+      }
+
+      // Transform the work item to match our expected format
+      const transformedWorkItem = {
+        id: workItem.id,
+        fields: {
+          ...workItem.fields,
+          "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItem.id}`,
+          "System.Description": workItem.fields?.["System.Description"] || "",
+          "System.State": workItem.fields?.["System.State"] || "Unknown",
+          "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
+        },
+        url: workItem.url || `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
+      };
+
+      results.push({ data: transformedWorkItem, comments: comments });
+    }
+
+    return results;
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('No work items found')) {
+      throw err;
+    }
+    
+    // If API call fails (e.g., no PAT token), provide helpful message
+    requestHandlerContext.stream.progress("⚠️ Work item search requires Azure DevOps PAT token configuration");
+    throw new Error(`Error searching work items with title "${searchQuery}" in project '${project}': ${err}. Configure Azure DevOps PAT for real data.`);
+  }
 }
 
 //get work item object from Azure DevOps by its work item id
