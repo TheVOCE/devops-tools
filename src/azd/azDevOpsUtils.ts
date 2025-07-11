@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import * as azdev from "azure-devops-node-api";
 import { logInfo } from "../logging.js";
-import { log } from "console";
 
 const workItemNumberRegex = /!(\d+)(\+?)/; // prefix: !, work item number, optional: + for comments
 const azdoOrgProjectRegex = /azdo:(.+)\/(.+?)[\s;,\/:]/; // for specifying org and project name
