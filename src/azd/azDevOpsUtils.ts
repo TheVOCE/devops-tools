@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as azdev from "azure-devops-node-api";
+import { logInfo } from "../logging.js";
 
 const workItemNumberRegex = /!(\d+)(\+?)/; // prefix: !, work item number, optional: + for comments
 const azdoOrgProjectRegex = /azdo:(.+)\/(.+?)[\s;,\/:]/; // for specifying org and project name
@@ -51,4 +53,33 @@ export function parseAzDevOpsValuesFromPromptSilent(
   const [azdoOrg, azdoProject] = azdoMatch ? [azdoMatch[1], azdoMatch[2]] : ["", ""];
 
   return { azdoOrg, azdoProject, itemId, commentsUsage };
+}
+
+/**
+ * Get Azure DevOps API connection using PAT token from configuration
+ * @param orgUrl The organization URL (e.g., https://dev.azure.com/myorg)
+ * @returns Promise<azdev.WebApi> The Azure DevOps WebApi connection
+ */
+export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
+  // Try to get stored PAT token
+  const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
+  
+  if (!token) {
+    // If no token is configured, provide helpful error message
+    const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
+    
+    // Log to output channel for diagnostic purposes
+    logInfo("Microsoft authentication not available, falling back to PAT token configuration required");
+    
+    vscode.window.showWarningMessage(message, "Open Settings").then(selection => {
+      if (selection === "Open Settings") {
+        vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
+      }
+    });
+    throw new Error(message);
+  }
+
+  const authHandler = azdev.getPersonalAccessTokenHandler(token);
+  const connection = new azdev.WebApi(orgUrl, authHandler);
+  return connection;
 }
