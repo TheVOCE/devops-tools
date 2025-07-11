@@ -1,0 +1,12 @@
+{
+"servers": {
+    "microsoft-learn-mcp": {
+        "type": "sse",
+        "url": "https://learn.microsoft.com/api/mcp/sse"
+    },
+    "azure-mcp": {
+        "type": "sse",
+        "url": "https://learn.microsoft.com/api/azure/mcp/sse"
+    }
+}
+}
