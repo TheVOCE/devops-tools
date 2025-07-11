@@ -93,7 +93,17 @@ export async function searchGhPullrequestsByTitle(
           console.warn(`Could not get comments for PR #${pr.number}: ${err}`);
         }
       }
-      results.push({ data: pr, comments: comments });
+      results.push({ 
+        data: {
+          number: pr.number,
+          title: pr.title,
+          body: pr.body || "",
+          html_url: pr.html_url,
+          state: pr.state,
+          reason: (pr as any).state_reason || undefined
+        }, 
+        comments: comments 
+      });
     }
 
     return results;

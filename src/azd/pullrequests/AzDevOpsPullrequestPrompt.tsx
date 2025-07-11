@@ -52,29 +52,33 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
       if (echoFullAzDPullRequest) {
         StateMultipleAzDPrsInStream(
           stream, 
-          azdoResults.map(result => ({
-            pullRequestId: result.data.id,
-            title: result.data.fields["System.Title"],
-            description: result.data.fields["System.Description"],
-            status: result.data.fields["System.State"],
-            url: result.data.url
+          azdoResults.filter(result => result.data).map(result => ({
+            pullRequestId: result.data!.id,
+            title: result.data!.fields["System.Title"],
+            description: result.data!.fields["System.Description"] || "",
+            status: result.data!.fields["System.State"],
+            url: result.data!.url || ""
           })), 
           searchQuery
         );
       } else {
         stream.markdown(`🔍 Found ${azdoResults.length} pull request${azdoResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
         azdoResults.forEach((result, index) => {
-          stream.markdown(`${index + 1}. 🔵**PR #${result.data.id}** [_${result.data.fields["System.State"]}_]: **${result.data.fields["System.Title"]}**\n`);
+          if (result.data) {
+            stream.markdown(`${index + 1}. 🔵**PR #${result.data.id}** [_${result.data.fields["System.State"]}_]: **${result.data.fields["System.Title"]}**\n`);
+          }
         });
         stream.markdown("\n");
       }
 
       azdoResults.forEach((result) => {
-        stream.button({
-          command: OPEN_URL_COMMAND,
-          title: vscode.l10n.t(`Open PR #${result.data.id} in Browser`),
-          arguments: [result.data.url],
-        });
+        if (result.data) {
+          stream.button({
+            command: OPEN_URL_COMMAND,
+            title: vscode.l10n.t(`Open PR #${result.data.id} in Browser`),
+            arguments: [result.data.url],
+          });
+        }
       });
       
       stream.markdown(`---\n\n`);
@@ -137,8 +141,8 @@ export class AzDevOpsPullrequestPrompt extends PromptElement<
     
     if (state.searchType === 'title' && state.azdoResults) {
       // Handle multiple PR results from title search
-      const prTitles = state.azdoResults.map(result => result.data.fields["System.Title"]).join(", ");
-      const prDescriptions = state.azdoResults.map(result => result.data.fields["System.Description"] || "No description").join("\n\n");
+      const prTitles = state.azdoResults.filter(result => result.data).map(result => result.data!.fields["System.Title"]).join(", ");
+      const prDescriptions = state.azdoResults.filter(result => result.data).map(result => result.data!.fields["System.Description"] || "No description").join("\n\n");
       
       return (
         <>

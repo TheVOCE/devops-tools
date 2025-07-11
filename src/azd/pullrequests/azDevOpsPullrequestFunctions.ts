@@ -34,7 +34,7 @@ export function StateMultipleAzDPrsInStream(
   stream.markdown(`🔍 Found ${pullrequests.length} pull request${pullrequests.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
   
   pullrequests.forEach((pr, index) => {
-    const statusText = PullRequestStatus[pr.status] || pr.status;
+    const statusText = (PullRequestStatus as any)[pr.status] || `Status ${pr.status}`;
     stream.markdown(`${index + 1}. 🔵**PR #${pr.pullRequestId}** [_${statusText}_]: **${pr.title}**\n`);
     // Show first 200 characters of description
     if (pr.description && pr.description.length > 0) {
@@ -111,8 +111,7 @@ export async function searchAzdPullrequestsByTitle(
     
     // Get all pull requests (both open and closed)
     const allPullRequests = await gitApi.getPullRequests(repoId, {
-      status: undefined, // Get all statuses
-      top: 100 // Limit to prevent overwhelming results
+      status: undefined // Get all statuses
     }, project);
 
     // Filter PRs that contain the search query in the title (case-insensitive)
@@ -130,11 +129,16 @@ export async function searchAzdPullrequestsByTitle(
     // Convert to AzDevOpsResult array
     const results: AzDevOpsResult[] = [];
     for (const pr of limitedPRs) {
+      // Skip PRs without valid ID
+      if (!pr.pullRequestId) {
+        continue;
+      }
+      
       let comments: AzDevOpsComment[] = [];
       if (withComments) {
         try {
           // Get pull request threads (comments)
-          const threads = await gitApi.getThreads(repoId, pr.pullRequestId!, project);
+          const threads = await gitApi.getThreads(repoId, pr.pullRequestId, project);
           
           // Flatten comments from all threads
           comments = threads.flatMap(thread => 
@@ -156,7 +160,7 @@ export async function searchAzdPullrequestsByTitle(
         fields: {
           "System.Title": pr.title || "",
           "System.Description": pr.description || "",
-          "System.State": PullRequestStatus[pr.status!] || "",
+          "System.State": (PullRequestStatus as any)[pr.status!] || `Status ${pr.status}`,
           "System.WorkItemType": "Pull Request"
         },
         url: `https://dev.azure.com/${org}/${project}/_git/${pr.repository?.name}/pullrequest/${pr.pullRequestId}`

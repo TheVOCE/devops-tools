@@ -52,23 +52,27 @@ export class GitHubPullrequestPrompt extends PromptElement<
       if (echoFullGHPullRequest) {
         StateMultipleGhPrsInStream(
           stream, 
-          ghResults.map(result => result.data), 
+          ghResults.filter(result => result.data).map(result => result.data!), 
           searchQuery
         );
       } else {
         stream.markdown(`🔍 Found ${ghResults.length} pull request${ghResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
         ghResults.forEach((result, index) => {
-          stream.markdown(`${index + 1}. 🔵**PR #${result.data.number}** [_${result.data.state}_]: **${result.data.title}**\n`);
+          if (result.data) {
+            stream.markdown(`${index + 1}. 🔵**PR #${result.data.number}** [_${result.data.state}_]: **${result.data.title}**\n`);
+          }
         });
         stream.markdown("\n");
       }
 
       ghResults.forEach((result) => {
-        stream.button({
-          command: OPEN_URL_COMMAND,
-          title: vscode.l10n.t(`Open PR #${result.data.number} in Browser`),
-          arguments: [result.data.html_url],
-        });
+        if (result.data) {
+          stream.button({
+            command: OPEN_URL_COMMAND,
+            title: vscode.l10n.t(`Open PR #${result.data.number} in Browser`),
+            arguments: [result.data.html_url],
+          });
+        }
       });
       
       stream.markdown(`---\n\n`);
@@ -125,8 +129,8 @@ export class GitHubPullrequestPrompt extends PromptElement<
     
     if (state.searchType === 'title' && state.ghResults) {
       // Handle multiple PR results from title search
-      const prTitles = state.ghResults.map(result => result.data.title).join(", ");
-      const prDescriptions = state.ghResults.map(result => result.data.body || "No description").join("\n\n");
+      const prTitles = state.ghResults.filter(result => result.data).map(result => result.data!.title).join(", ");
+      const prDescriptions = state.ghResults.filter(result => result.data).map(result => result.data!.body || "No description").join("\n\n");
       
       return (
         <>
