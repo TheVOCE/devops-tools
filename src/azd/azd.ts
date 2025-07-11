@@ -2,11 +2,12 @@ import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
+import { logInfo, logError } from "../logging.js";
 
 export async function getAzDevOpsOrgAndProject() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    console.error("No active editor found.");
+    logError("No active editor found.");
     return;
   }
 
@@ -18,13 +19,13 @@ export async function getAzDevOpsOrgAndProject() {
   try {
     const isRepo = await git.checkIsRepo();
     if (!isRepo) {
-      console.log(`No Git repository found in ${fileDirectory}`);
+      logInfo(`No Git repository found in ${fileDirectory}`);
       return;
     }
 
     const remotes = await git.getRemotes(true);
     if (remotes.length === 0) {
-      console.error("No remote repository found.");
+      logError("No remote repository found.");
       return;
     }
 
@@ -39,7 +40,7 @@ export async function getAzDevOpsOrgAndProject() {
       match = remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)/);
     }
     if (!match) {
-      console.error("Remote repository is not an Azure DevOps repository.");
+      logError("Remote repository is not an Azure DevOps repository.");
       return;
     }
 
@@ -47,7 +48,7 @@ export async function getAzDevOpsOrgAndProject() {
     const project = match[2];
     return { org, project, remoteUrl };
   } catch (err) {
-    console.error(err + " It looks like there is no git context");
+    logError(`${err} It looks like there is no git context`);
   }
 }
 
@@ -99,6 +100,6 @@ export async function determineAzDoOrgAndProjectToUse(
     }
   }
 
-  console.log(`Org: ${org}, Project: ${project}`);
+  logInfo(`Org: ${org}, Project: ${project}`);
   return { org, project };
 }
