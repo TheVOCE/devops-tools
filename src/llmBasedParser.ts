@@ -41,7 +41,7 @@ Available commands:
 
 Extract the following information:
 - command: Which DevOps command the user likely wants (gh-issue, gh-pullrequest, azd-workitem, azd-pullrequest)
-- itemId: The ID/number of the issue, PR, or work item (look for patterns like !123, #456, or just numbers) - set to empty string if searching by title
+- itemId: The ID/number of the issue, PR, or work item. For ID-based searches, look for patterns like !123, #456, or just numbers, and set itemId to that number. For title-based searches, set itemId to an empty string and extract the search text into searchQuery.
 - searchQuery: The title text to search for (only for title-based searches)
 - searchType: "id" for ID-based searches, "title" for title-based searches
 - commentsUsage: Whether user wants to include comments (look for keywords like "comments", "discussion", "conversation", or + symbol)
