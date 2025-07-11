@@ -30,6 +30,10 @@ export async function getAzDevOpsOrgAndProject() {
     }
 
     const remoteUrl = remotes[0].refs.fetch;
+    if (remoteUrl) {
+      logInfo(`Remote URL: ${remoteUrl}`);
+    }
+
     // Azure DevOps remote URL patterns:
     // https://dev.azure.com/{organization}/{project}/_git/{repo}
     // or
@@ -80,6 +84,8 @@ export async function determineAzDoOrgAndProjectToUse(
     if (gatheredAzDoOrgProject.org !== "" && gatheredAzDoOrgProject.project !== "") {
       org = gatheredAzDoOrgProject.org;
       project = gatheredAzDoOrgProject.project;
+      logInfo(`Using git context from remote URL: ${gatheredAzDoOrgProject.remoteUrl}`);
+      logInfo(`Extracted Org: ${org}, Project: ${project}`);
       requestHandlerContext.stream.progress(
         `using git context from current file: azdo://${org}/${project}`
       );
@@ -90,10 +96,14 @@ export async function determineAzDoOrgAndProjectToUse(
     org = requestHandlerContext.vscodeContext.globalState.get("azdoOrg", "");
     project = requestHandlerContext.vscodeContext.globalState.get("azdoProject", "");
     if (org === "" || project === "") {
+      logError(
+        "No Azure DevOps organization or project specified. Please specify them in the prompt or open a file in an Azure DevOps git repository."
+      );
       throw new Error(
         "There is no git context. Please either open a file or folder of any Azure DevOps git repository or specify the organization and project in the prompt like `azdo:<org>/<project>`."
       );
     } else {
+      logInfo(`Using remembered Azure DevOps context: ${org}/${project}`);
       requestHandlerContext.stream.progress(
         `using remembered git context: azdo://${org}/${project}`
       );

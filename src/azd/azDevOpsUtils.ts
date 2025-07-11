@@ -9,6 +9,7 @@ export function parseAzDevOpsValuesFromPrompt(
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream
 ) {
+  logInfo("Parsing Azure DevOps values from prompt");
   const workItemMatch = request.prompt.match(workItemNumberRegex);
   
   let itemId = "";
@@ -39,6 +40,7 @@ export function parseAzDevOpsValuesFromPrompt(
 export function parseAzDevOpsValuesFromPromptSilent(
   request: vscode.ChatRequest
 ) {
+  logInfo("Parsing Azure DevOps values from prompt silently");
   const workItemMatch = request.prompt.match(workItemNumberRegex);
   
   let itemId = "";
@@ -62,8 +64,10 @@ export function parseAzDevOpsValuesFromPromptSilent(
  */
 export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
   // Try to get stored PAT token
+  logInfo("Retrieving Azure DevOps PAT token from configuration");
   const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
-  
+  logInfo("Retrieving Azure DevOps connection using PAT token");
+
   if (!token) {
     // If no token is configured, provide helpful error message
     const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
@@ -79,7 +83,9 @@ export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.We
     throw new Error(message);
   }
 
+  logInfo(`Using Azure DevOps PAT token for organization: ${orgUrl}`);
   const authHandler = azdev.getPersonalAccessTokenHandler(token);
   const connection = new azdev.WebApi(orgUrl, authHandler);
+  logInfo(`Successfully created Azure DevOps connection for organization: ${orgUrl}`);
   return connection;
 }

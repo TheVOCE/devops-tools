@@ -16,8 +16,12 @@ export function StateFullWorkItemInStream(
 ) {
   const title = workItem.fields["System.Title"];
   const description = workItem.fields["System.Description"] || "";
+  const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
+  const state = workItem.fields["System.State"] || "Unknown";
   
-  stream.markdown(`🔷Work Item: **${title}**\n\n`);
+  stream.markdown(`🔷Work Item: **${title}**\n`);
+  stream.markdown(`Type: ${workItemType}\n`);
+  stream.markdown(`State: ${state}\n\n`);
   stream.markdown(description.replaceAll("\n", "\n> ") + "");
   if (comments?.length > 0) {
     stream.markdown("\n\n_Comments_\n");
