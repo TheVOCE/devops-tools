@@ -6,6 +6,7 @@ import {
   determineAzDoOrgAndProjectToUse,
   getAzDevOpsOrgAndProject,
 } from "../azd";
+import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
@@ -23,27 +24,6 @@ export function StateFullAzDPrInStream(
     stream.markdown(comments.replaceAll("\n", "\n> ") + "");
   }
   stream.markdown("\n\n----\n\n");
-}
-
-async function getAzureDevOpsApi(
-  requestHandlerContext: RequestHandlerContext,
-  org: string
-): Promise<WebApi> {
-  // Get the PAT from settings
-  const config = vscode.workspace.getConfiguration("voce");
-  const pat = config.get("azureDevOpsPat", "") as string;
-  
-  if (!pat) {
-    throw new Error("Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in your settings.");
-  }
-
-  const orgUrl = `https://dev.azure.com/${org}`;
-  
-  // Create the API connection
-  const authHandler = getPersonalAccessTokenHandler(pat);
-  const connection = new WebApi(orgUrl, authHandler);
-  
-  return connection;
 }
 
 async function findRepositoryByRemoteUrl(
@@ -104,7 +84,8 @@ export async function getAzdPullrequestById(
   let sharedConnection: WebApi;
   let sharedRepoId: string;
   try {
-    const connection = await getAzureDevOpsApi(requestHandlerContext, org);
+    const orgUrl = `https://dev.azure.com/${org}`;
+    const connection = await getAzureDevOpsConnection(orgUrl);
     const gitApi: IGitApi = await connection.getGitApi();
     
     // Find the repository by matching the remote URL
