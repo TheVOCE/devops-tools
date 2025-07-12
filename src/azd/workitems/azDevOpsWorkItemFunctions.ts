@@ -63,7 +63,15 @@ export function StateMultipleWorkItemsInStream(
       const truncatedDescription = description.length > 200 ? description.substring(0, 200) + "..." : description;
       stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
     }
-    stream.markdown(`   🔗 [View Work Item #${workItem.id}](${workItem.url})\n\n`);
+    
+    // Add button to open work item in browser using the same pattern as single work item
+    stream.button({
+      command: OPEN_URL_COMMAND,
+      title: vscode.l10n.t("Open Work Item #" + workItem.id + " in Browser"),
+      arguments: [workItem.url],
+    });
+    
+    stream.markdown("\n");
   });
   
   stream.markdown("---\n\n");
