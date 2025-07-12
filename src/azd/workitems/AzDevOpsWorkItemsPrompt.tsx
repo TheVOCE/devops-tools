@@ -109,19 +109,15 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
         stream.markdown(
           `🔷Work Item [_${azdoResult.data?.fields["System.WorkItemType"]}_] [_${azdoResult.data?.fields["System.State"]}_]: **${azdoResult.data?.fields["System.Title"]}**\n\n`
         );
+        
+        // Add button for the abbreviated display
+        stream.button({
+          command: OPEN_URL_COMMAND,
+          title: vscode.l10n.t("Open Work Item in Browser"),
+          arguments: [azdoResult.data?.url],
+        });
       }
 
-      // Get org and project for URL construction
-      const { determineAzDoOrgAndProjectToUse } = await import("../azd.js");
-      const { org, project } = await determineAzDoOrgAndProjectToUse(azdoOrg, azdoProject, requestHandlerContext);
-      
-      // Create URL for Azure DevOps work item
-      const workItemUrl = `https://dev.azure.com/${org}/${project}/_workitems/edit/${itemId}`;
-      stream.button({
-        command: OPEN_URL_COMMAND,
-        title: vscode.l10n.t("Open Work Item in Browser"),
-        arguments: [workItemUrl],
-      });
       stream.markdown(`---\n\n`);
       return { azdoResult };
     }

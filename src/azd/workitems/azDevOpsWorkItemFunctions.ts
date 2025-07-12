@@ -8,10 +8,11 @@ import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logInfo } from "../../logging.js";
+import { OPEN_URL_COMMAND } from "../../consts";
 
 export function StateFullWorkItemInStream(
   stream: vscode.ChatResponseStream,
-  workItem: { fields: { [key: string]: any } },
+  workItem: { id?: number; fields: { [key: string]: any }; url?: string },
   comments: AzDevOpsComment[]
 ) {
   const title = workItem.fields["System.Title"];
@@ -29,6 +30,17 @@ export function StateFullWorkItemInStream(
       stream.markdown(`\n> ${comment.body?.replaceAll("\n", "\n> ") + ""}\n`)
     );
   }
+  
+  // Add button to open work item in browser if URL is available
+  if (workItem.url && workItem.id) {
+    stream.markdown("\n\n");
+    stream.button({
+      command: OPEN_URL_COMMAND,
+      title: vscode.l10n.t("Open Work Item #" + workItem.id + " in Browser"),
+      arguments: [workItem.url],
+    });
+  }
+  
   stream.markdown("\n\n----\n\n");
 }
 
