@@ -169,7 +169,7 @@ export async function searchAzdWorkItemsByTitle(
           "System.State": workItem.fields?.["System.State"] || "Unknown",
           "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
         },
-        url: workItem.url || `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
+        url: `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
       };
 
       results.push({ data: transformedWorkItem, comments: comments });
@@ -255,7 +255,7 @@ export async function getWorkItemAndCommentsById(
         "System.State": workItem.fields?.["System.State"] || "Unknown",
         "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
       },
-      url: workItem.url || `${orgUrl}/${project}/_workitems/edit/${workItemId}`
+      url: `${orgUrl}/${project}/_workitems/edit/${workItemId}`
     };
 
     return { data: transformedWorkItem, comments: comments };
