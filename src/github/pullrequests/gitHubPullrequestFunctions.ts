@@ -5,7 +5,7 @@ import {
 } from "../gitHub";
 import { type GitHubComment } from "../GitHubComment";
 import { type GitHubResult } from "../GitHubResult";
-import { DEFAULT_DESCRIPTION_TRUNCATION_LENGTH } from "../../consts";
+import { getDescriptionTruncationLength } from "../../consts";
 
 export function StateFullGhPrInStream(
   stream: vscode.ChatResponseStream,
@@ -33,7 +33,8 @@ export function StateMultipleGhPrsInStream(
     stream.markdown(`${index + 1}. 🔵**PR #${pr.number}** [_${pr.state}_]: **${pr.title}**\n`);
     // Show first configured characters of description
     if (pr.body && pr.body.length > 0) {
-      const truncatedBody = pr.body.length > DEFAULT_DESCRIPTION_TRUNCATION_LENGTH ? pr.body.substring(0, DEFAULT_DESCRIPTION_TRUNCATION_LENGTH) + "..." : pr.body;
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedBody = pr.body.length > truncationLength ? pr.body.substring(0, truncationLength) + "..." : pr.body;
       stream.markdown(`   > ${truncatedBody.replaceAll("\n", " ")}\n`);
     }
     stream.markdown(`   🔗 [View PR #${pr.number}](${pr.html_url})\n\n`);

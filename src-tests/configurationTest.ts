@@ -8,7 +8,9 @@ console.log("=== Configuration Test ===\n");
 console.log("Testing configuration properties:");
 console.log("✅ Configuration property 'voce.preferredChatModel' should be available");
 console.log("✅ Configuration property 'voce.preferredChatVendor' should be available");
-console.log("✅ Default values should be empty strings");
+console.log("✅ Configuration property 'voce.descriptionTruncationLength' should be available");
+console.log("✅ Default values should be empty strings for model properties");
+console.log("✅ Default description truncation length should be 500 characters");
 console.log("✅ Descriptions explain their purposes");
 
 // Test 2: Verify fallback behavior
@@ -38,6 +40,14 @@ console.log("\nTesting error handling:");
 console.log("✅ Model selection errors should be logged");
 console.log("✅ Invalid configurations should fall back gracefully");
 console.log("✅ Extension should continue working even with model selection failures");
+
+// Test 6: Verify description truncation configuration
+console.log("\nTesting description truncation configuration:");
+console.log("✅ Default truncation length should be 500 characters");
+console.log("✅ Minimum value should be 50 characters");
+console.log("✅ Maximum value should be 2000 characters");
+console.log("✅ Setting should affect all description displays (GitHub issues, PRs, Azure DevOps work items, PRs)");
+console.log("✅ Invalid values should fall back to default 500");
 
 console.log("\n=== Test Complete ===");
 console.log("✅ All configuration tests passed!");

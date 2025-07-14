@@ -3,7 +3,7 @@ import type { RequestHandlerContext } from "../../requestHandlerContext";
 import { determineGhOwnerAndRepoToUse } from "../gitHub";
 import { type GitHubComment } from "../GitHubComment";
 import { type GitHubResult } from "../GitHubResult";
-import { DEFAULT_DESCRIPTION_TRUNCATION_LENGTH } from "../../consts";
+import { getDescriptionTruncationLength } from "../../consts";
 
 export function StateFullGHIssueInStream(
   stream: vscode.ChatResponseStream,
@@ -32,7 +32,8 @@ export function StateMultipleGHIssuesInStream(
     stream.markdown(`${index + 1}. 🟣**Issue #${issue.number}** [_${issue.state}_]: **${issue.title}**\n`);
     // Show first configured characters of description
     if (issue.body && issue.body.length > 0) {
-      const truncatedBody = issue.body.length > DEFAULT_DESCRIPTION_TRUNCATION_LENGTH ? issue.body.substring(0, DEFAULT_DESCRIPTION_TRUNCATION_LENGTH) + "..." : issue.body;
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedBody = issue.body.length > truncationLength ? issue.body.substring(0, truncationLength) + "..." : issue.body;
       stream.markdown(`   > ${truncatedBody.replaceAll("\n", " ")}\n`);
     }
     stream.markdown(`   🔗 [View Issue #${issue.number}](${issue.html_url})\n\n`);

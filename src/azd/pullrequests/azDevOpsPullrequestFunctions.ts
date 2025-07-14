@@ -10,7 +10,7 @@ import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
-import { DEFAULT_DESCRIPTION_TRUNCATION_LENGTH } from "../../consts";
+import { getDescriptionTruncationLength } from "../../consts";
 
 export function StateFullAzDPrInStream(
   stream: vscode.ChatResponseStream,
@@ -39,7 +39,8 @@ export function StateMultipleAzDPrsInStream(
     stream.markdown(`${index + 1}. 🔵**PR #${pr.pullRequestId}** [_${statusText}_]: **${pr.title}**\n`);
     // Show first configured characters of description
     if (pr.description && pr.description.length > 0) {
-      const truncatedDescription = pr.description.length > DEFAULT_DESCRIPTION_TRUNCATION_LENGTH ? pr.description.substring(0, DEFAULT_DESCRIPTION_TRUNCATION_LENGTH) + "..." : pr.description;
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedDescription = pr.description.length > truncationLength ? pr.description.substring(0, truncationLength) + "..." : pr.description;
       stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
     }
     stream.markdown(`   🔗 [View PR #${pr.pullRequestId}](${pr.url})\n\n`);
