@@ -8,7 +8,7 @@ import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logInfo } from "../../logging.js";
-import { OPEN_URL_COMMAND } from "../../consts";
+import { OPEN_URL_COMMAND, DEFAULT_DESCRIPTION_TRUNCATION_LENGTH } from "../../consts";
 
 export function StateFullWorkItemInStream(
   stream: vscode.ChatResponseStream,
@@ -58,9 +58,9 @@ export function StateMultipleWorkItemsInStream(
     const description = workItem.fields["System.Description"] || "";
     
     stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
-    // Show first 200 characters of description
+    // Show first configured characters of description
     if (description && description.length > 0) {
-      const truncatedDescription = description.length > 200 ? description.substring(0, 200) + "..." : description;
+      const truncatedDescription = description.length > DEFAULT_DESCRIPTION_TRUNCATION_LENGTH ? description.substring(0, DEFAULT_DESCRIPTION_TRUNCATION_LENGTH) + "..." : description;
       stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
     }
     
