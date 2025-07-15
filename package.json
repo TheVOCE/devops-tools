@@ -156,7 +156,7 @@
         "@octokit/rest": "^22.0.0",
         "@stylistic/eslint-plugin": "^5.1.0",
         "@types/node": "^24",
-        "@types/vscode": "^1.101.0",
+        "@types/vscode": "^1.102.0",
         "@vscode/vsce": "^3.6.0",
         "eslint": "^9.30.1",
         "simple-git": "^3.28.0",
