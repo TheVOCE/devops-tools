@@ -107,6 +107,16 @@
                     "minimum": 50,
                     "maximum": 2000,
                     "description": "Description truncation length"
+                },
+                "voce.gh_customhostname": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom hostname for GitHub Server (onpremise). Example: 'github.company.com'. Leave empty to use github.com."
+                },
+                "voce.azd_customhostname": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom hostname for Azure DevOps Server (onpremise). Example: 'devops.company.com'. Leave empty to use dev.azure.com."
                 }
             }
         },

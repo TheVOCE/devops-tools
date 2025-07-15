@@ -2,6 +2,50 @@ import * as vscode from "vscode";
 import * as azdev from "azure-devops-node-api";
 import { logInfo } from "../logging.js";
 
+/**
+ * Get the configured Azure DevOps hostname (custom or default)
+ */
+function getAzureDevOpsHostname(): string {
+  const config = vscode.workspace.getConfiguration("voce");
+  const customHostname = config.get<string>("azd_customhostname");
+  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : "dev.azure.com";
+}
+
+/**
+ * Construct Azure DevOps organization URL using configured hostname
+ * @param orgName The organization name
+ * @returns The full organization URL
+ */
+export function getAzureDevOpsOrgUrl(orgName: string): string {
+  const hostname = getAzureDevOpsHostname();
+  return `https://${hostname}/${orgName}`;
+}
+
+/**
+ * Construct Azure DevOps work item URL using configured hostname
+ * @param orgName The organization name
+ * @param projectName The project name
+ * @param workItemId The work item ID
+ * @returns The full work item URL
+ */
+export function getAzureDevOpsWorkItemUrl(orgName: string, projectName: string, workItemId: number | string): string {
+  const hostname = getAzureDevOpsHostname();
+  return `https://${hostname}/${orgName}/${projectName}/_workitems/edit/${workItemId}`;
+}
+
+/**
+ * Construct Azure DevOps pull request URL using configured hostname
+ * @param orgName The organization name
+ * @param projectName The project name
+ * @param repoName The repository name
+ * @param pullRequestId The pull request ID
+ * @returns The full pull request URL
+ */
+export function getAzureDevOpsPullRequestUrl(orgName: string, projectName: string, repoName: string, pullRequestId: number | string): string {
+  const hostname = getAzureDevOpsHostname();
+  return `https://${hostname}/${orgName}/${projectName}/_git/${repoName}/pullrequest/${pullRequestId}`;
+}
+
 const workItemNumberRegex = /!(\d+)(\+?)/; // prefix: !, work item number, optional: + for comments
 const azdoOrgProjectRegex = /azdo:(.+)\/(.+?)[\s;,\/:]/; // for specifying org and project name
 

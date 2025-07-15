@@ -4,6 +4,15 @@ import simpleGit from "simple-git";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
 
+/**
+ * Get the configured Azure DevOps hostname (custom or default)
+ */
+function getAzureDevOpsHostname(): string {
+  const config = vscode.workspace.getConfiguration("voce");
+  const customHostname = config.get<string>("azd_customhostname");
+  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : "dev.azure.com";
+}
+
 export async function getAzDevOpsOrgAndProject() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -34,17 +43,25 @@ export async function getAzDevOpsOrgAndProject() {
       logInfo(`Remote URL: ${remoteUrl}`);
     }
 
+    const azDevOpsHostname = getAzureDevOpsHostname();
+    logInfo(`Using Azure DevOps hostname: ${azDevOpsHostname}`);
+    
+    // Escape dots in hostname for regex
+    const escapedHostname = azDevOpsHostname.replace(/\./g, '\\.');
+    
     // Azure DevOps remote URL patterns:
-    // https://dev.azure.com/{organization}/{project}/_git/{repo}
+    // https://{hostname}/{organization}/{project}/_git/{repo}
     // or
-    // git@ssh.dev.azure.com:v3/{organization}/{project}/{repo}
-    let match = remoteUrl.match(/dev\.azure\.com[/:]([^/]+)\/([^/]+)/);
+    // git@ssh.{hostname}:v3/{organization}/{project}/{repo}
+    let match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
     if (!match) {
-      // Try SSH pattern
-      match = remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)/);
+      // Try SSH pattern - for Azure DevOps Server, SSH might be ssh.{hostname}
+      const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
+      const escapedSshHostname = sshHostname.replace(/\./g, '\\.');
+      match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     }
     if (!match) {
-      logError("Remote repository is not an Azure DevOps repository.");
+      logError(`Remote repository is not an Azure DevOps repository on ${azDevOpsHostname}.`);
       return;
     }
 
