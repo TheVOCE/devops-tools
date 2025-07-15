@@ -50,11 +50,19 @@ export class GitHubIssuesPrompt extends PromptElement<
       const echoFullIssue = config.get("echoFullGHIssue", false) as boolean;
       
       if (echoFullIssue) {
-        StateMultipleGHIssuesInStream(
-          stream, 
-          ghResults.filter(result => result.data).map(result => result.data!), 
-          searchQuery
-        );
+        stream.markdown(`🔍 Found ${ghResults.length} issue${ghResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
+        ghResults.forEach((result, index) => {
+          if (result.data) {
+            stream.markdown(`${index + 1}. 🟣**Issue #${result.data.number}** [_${result.data.state}_]: **${result.data.title}**\n`);
+            stream.markdown(`**Body:**\n${result.data.body}\n`);
+            stream.button({
+              command: OPEN_URL_COMMAND,
+              title: vscode.l10n.t("Open Issue #" + result.data.number),
+              arguments: [result.data.html_url],
+            });
+            stream.markdown(`\n`);
+          }
+        });
       } else {
         stream.markdown(`🔍 Found ${ghResults.length} issue${ghResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
         ghResults.forEach((result, index) => {
