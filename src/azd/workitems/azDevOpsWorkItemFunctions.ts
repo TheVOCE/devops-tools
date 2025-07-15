@@ -9,7 +9,7 @@ import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logInfo } from "../../logging.js";
 import { OPEN_URL_COMMAND, getDescriptionTruncationLength } from "../../consts";
-import * as sanitizeHtml from "sanitize-html";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
@@ -22,12 +22,7 @@ function sanitizeWorkItemField(content: string): string {
   }
   
   // Configure sanitize-html to strip all HTML tags and return plain text
-  return sanitizeHtml(content, {
-    allowedTags: [], // No HTML tags allowed
-    allowedAttributes: {}, // No attributes allowed
-    stripIgnoreTag: true, // Strip tags that are not in allowedTags
-    stripIgnoreTagBody: false // Keep content inside stripped tags
-  }).trim();
+  return sanitizeHtml(content).trim();
 }
 
 export function StateFullWorkItemInStream(

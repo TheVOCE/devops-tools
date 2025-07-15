@@ -16,25 +16,20 @@ import type { AzDevOpsResult } from "../AzDevOpsResult";
 import { parseAzDevOpsValuesFromPrompt } from "../azDevOpsUtils";
 import { AzDevOpsWorkItemsPromptProps } from "./AzDevOpsWorkItemsPromptProps";
 import { AzDevOpsWorkItemsPromptState } from "./AzDevOpsWorkItemsPromptState";
-import * as sanitizeHtml from "sanitize-html";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
  * @param content The content to sanitize
  * @returns Sanitized plain text content
  */
-function sanitizeWorkItemField(content: string): string {
+function sanitizeWorkItemField(content: string ): string {
   if (!content || typeof content !== 'string') {
     return '';
   }
   
   // Configure sanitize-html to strip all HTML tags and return plain text
-  return sanitizeHtml(content, {
-    allowedTags: [], // No HTML tags allowed
-    allowedAttributes: {}, // No attributes allowed
-    stripIgnoreTag: true, // Strip tags that are not in allowedTags
-    stripIgnoreTagBody: false // Keep content inside stripped tags
-  }).trim();
+  return sanitizeHtml(content).trim();
 }
 
 export class AzDevOpsWorkItemsPrompt extends PromptElement<
@@ -148,8 +143,8 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
     const { azdoResult } = state;
     
     // Get work item fields and sanitize them for LLM context
-    const title = sanitizeWorkItemField(azdoResult?.data?.fields["System.Title"]);
-    const workItemType = sanitizeWorkItemField(azdoResult?.data?.fields["System.WorkItemType"]);
+    const title = sanitizeWorkItemField(azdoResult?.data?.fields["System.Title"] || "");
+    const workItemType = sanitizeWorkItemField(azdoResult?.data?.fields["System.WorkItemType"] || "");
     const description = sanitizeWorkItemField(azdoResult?.data?.fields["System.Description"] || "");
     const acceptanceCriteria = sanitizeWorkItemField(azdoResult?.data?.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
     const reproSteps = sanitizeWorkItemField(azdoResult?.data?.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
