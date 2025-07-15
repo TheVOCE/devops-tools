@@ -8,6 +8,8 @@ import {
 import {
   getIssueAndCommentsById,
   StateFullGHIssueInStream,
+  searchGhIssuesByTitle,
+  StateMultipleGHIssuesInStream,
 } from "./gitHubIssueFunctions";
 import { ASSISTANT_MESSAGE, OPEN_URL_COMMAND } from "../../consts";
 import type { GitHubResult } from "../GitHubResult";
@@ -22,44 +24,103 @@ export class GitHubIssuesPrompt extends PromptElement<
   override async prepare() {
     const { requestHandlerContext } = this.props;
     const { request, stream } = requestHandlerContext;
-    const { ghOwner, ghRepo, itemId, commentsUsage } = parseGitHubValuesFromPrompt(
-      request,
-      stream
-    );
+    
+    // Check if this is a title-based search by looking for searchQuery in the user prompt
+    // This will be set by the LLM parser when it detects a title search intent
+    const searchQueryMatch = this.props.userPrompt.match(/searchQuery:(.+)/);
+    const isSearchByTitle = searchQueryMatch !== null;
+    
+    if (isSearchByTitle) {
+      const searchQuery = searchQueryMatch[1].trim();
+      const { ghOwner, ghRepo, commentsUsage } = parseGitHubValuesFromPrompt(request, stream);
+      
+      stream.progress(`Searching for issues with title containing "${searchQuery}"...`);
+      
+      const ghResults = (await searchGhIssuesByTitle(
+        requestHandlerContext,
+        searchQuery,
+        ghOwner,
+        ghRepo,
+        commentsUsage
+      )) as GitHubResult[];
 
-    const ghResult = (await getIssueAndCommentsById(
-      requestHandlerContext,
-      Number(itemId),
-      ghOwner,
-      ghRepo,
-      commentsUsage
-    )) as GitHubResult;
+      stream.progress(`Found ${ghResults.length} issue${ghResults.length !== 1 ? 's' : ''}.`);
 
-    stream.progress(`🟣Issue "${ghResult?.data?.title}" loaded.`);
-
-    // Access vscode settings
-    const config = vscode.workspace.getConfiguration("voce");
-    const echoFullIssue = config.get("echoFullGHIssue", false) as boolean;
-    const echoIssueComments = config.get("echoGHIssueComments", false) as boolean;
-    if (echoFullIssue) {
-      StateFullGHIssueInStream(
-        stream,
-        ghResult?.data!,
-        echoIssueComments ? ghResult?.comments ?? [] : []
-      );
+      const config = vscode.workspace.getConfiguration("voce");
+      const echoFullIssue = config.get("echoFullGHIssue", false) as boolean;
+      
+      if (echoFullIssue) {
+        stream.markdown(`🔍 Found ${ghResults.length} issue${ghResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
+        ghResults.forEach((result, index) => {
+          if (result.data) {
+            stream.markdown(`${index + 1}. 🟣**Issue #${result.data.number}** [_${result.data.state}_]: **${result.data.title}**\n`);
+            stream.markdown(`**Body:**\n${result.data.body}\n`);
+            stream.button({
+              command: OPEN_URL_COMMAND,
+              title: vscode.l10n.t("Open Issue #" + result.data.number),
+              arguments: [result.data.html_url],
+            });
+            stream.markdown(`\n`);
+          }
+        });
+      } else {
+        stream.markdown(`🔍 Found ${ghResults.length} issue${ghResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
+        ghResults.forEach((result, index) => {
+          if (result.data) {
+            stream.markdown(`${index + 1}. 🟣**Issue #${result.data.number}** [_${result.data.state}_]: **${result.data.title}**\n`);
+            stream.button({
+              command: OPEN_URL_COMMAND,
+              title: vscode.l10n.t("Open Issue #" + result.data.number),
+              arguments: [result.data.html_url],
+            });
+            stream.markdown(`\n`);
+          }
+        });
+      }
+      
+      stream.markdown(`---\n\n`);
+      return { ghResult: ghResults[0] || null }; // Return first result for LLM context
     } else {
-      stream.markdown(
-        `🟣Issue [_${ghResult.data?.state}_]: **${ghResult.data?.title}**\n\n`
+      // Original ID-based search logic
+      const { ghOwner, ghRepo, itemId, commentsUsage } = parseGitHubValuesFromPrompt(
+        request,
+        stream
       );
-    }
 
-    stream.button({
-      command: OPEN_URL_COMMAND,
-      title: vscode.l10n.t("Open Issue in Browser"),
-      arguments: [ghResult?.data?.html_url],
-    });
-    stream.markdown(`---\n\n`);
-    return { ghResult };
+      const ghResult = (await getIssueAndCommentsById(
+        requestHandlerContext,
+        Number(itemId),
+        ghOwner,
+        ghRepo,
+        commentsUsage
+      )) as GitHubResult;
+
+      stream.progress(`🟣Issue "${ghResult?.data?.title}" loaded.`);
+
+      // Access vscode settings
+      const config = vscode.workspace.getConfiguration("voce");
+      const echoFullIssue = config.get("echoFullGHIssue", false) as boolean;
+      const echoIssueComments = config.get("echoGHIssueComments", false) as boolean;
+      if (echoFullIssue) {
+        StateFullGHIssueInStream(
+          stream,
+          ghResult?.data!,
+          echoIssueComments ? ghResult?.comments ?? [] : []
+        );
+      } else {
+        stream.markdown(
+          `🟣Issue [_${ghResult.data?.state}_]: **${ghResult.data?.title}**\n\n`
+        );
+      }
+
+      stream.button({
+        command: OPEN_URL_COMMAND,
+        title: vscode.l10n.t("Open Issue in Browser"),
+        arguments: [ghResult?.data?.html_url],
+      });
+      stream.markdown(`---\n\n`);
+      return { ghResult };
+    }
   }
 
   render(state: GitHubIssuesPromptState, sizing: PromptSizing) {

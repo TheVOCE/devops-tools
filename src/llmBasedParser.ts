@@ -78,6 +78,8 @@ User: "What's the status of GitHub issue 456 with comments?" -> {"command": "gh-
 User: "Pull request 789 from myorg/myrepo" -> {"command": "gh-pullrequest", "itemId": "789", "searchType": "id", "ghOwner": "myorg", "ghRepo": "myrepo", "commentsUsage": false, "confidence": 0.8}
 User: "Find pull requests with title containing bugfix" -> {"command": "gh-pullrequest", "itemId": "", "searchQuery": "bugfix", "searchType": "title", "commentsUsage": false, "confidence": 0.8}
 User: "Search for PRs about authentication" -> {"command": "gh-pullrequest", "itemId": "", "searchQuery": "authentication", "searchType": "title", "commentsUsage": false, "confidence": 0.8}
+User: "Find GitHub issues about login" -> {"command": "gh-issue", "itemId": "", "searchQuery": "login", "searchType": "title", "commentsUsage": false, "confidence": 0.8}
+User: "Search for work items with bug in title" -> {"command": "azd-workitem", "itemId": "", "searchQuery": "bug", "searchType": "title", "commentsUsage": false, "confidence": 0.8}
 User: "Show me !42" -> {"command": "gh-pullrequest", "itemId": "42", "searchType": "id", "commentsUsage": false, "confidence": 0.9}`;
 
     let gitRepoUrl = await getGitRepoUrl();

@@ -100,6 +100,13 @@
                     "type": "string",
                     "default": "",
                     "description": "Preferred model vendor for general chat responses (e.g., 'copilot', 'openai'). Leave empty to use default vendor 'copilot'."
+                },
+                "voce.descriptionTruncationLength": {
+                    "type": "number",
+                    "default": 500,
+                    "minimum": 50,
+                    "maximum": 2000,
+                    "description": "Description truncation length"
                 }
             }
         },
