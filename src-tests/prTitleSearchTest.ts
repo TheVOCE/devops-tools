@@ -46,7 +46,7 @@ validationTests.forEach((test, index) => {
   console.log(`        Input: ${JSON.stringify(test.input)}`);
   console.log(`        ${test.description}`);
   
-  if (passed) passedValidationTests++;
+  if (passed) {passedValidationTests++;}
 });
 
 console.log(`\n   Validation tests: ${passedValidationTests}/${validationTests.length} passed`);
@@ -126,7 +126,7 @@ interfaceTests.forEach((test, index) => {
   console.log(`   2.${index + 1} ${test.name}: ${hasRequiredFields ? "✅ PASS" : "❌ FAIL"}`);
   console.log(`        ${test.description}`);
   
-  if (hasRequiredFields) passedInterfaceTests++;
+  if (hasRequiredFields) {passedInterfaceTests++;}
 });
 
 // Test user scenarios

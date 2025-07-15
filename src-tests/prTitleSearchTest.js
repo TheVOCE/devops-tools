@@ -41,8 +41,9 @@ validationTests.forEach((test, index) => {
     console.log(`   ${index + 1}.${index + 1} ${test.name}: ${passed ? "✅ PASS" : "❌ FAIL"}`);
     console.log(`        Input: ${JSON.stringify(test.input)}`);
     console.log(`        ${test.description}`);
-    if (passed)
+    if (passed) {
         passedValidationTests++;
+    }
 });
 console.log(`\n   Validation tests: ${passedValidationTests}/${validationTests.length} passed`);
 // Test Azure DevOps title search support
@@ -112,8 +113,9 @@ interfaceTests.forEach((test, index) => {
         typeof test.command.confidence === 'number';
     console.log(`   2.${index + 1} ${test.name}: ${hasRequiredFields ? "✅ PASS" : "❌ FAIL"}`);
     console.log(`        ${test.description}`);
-    if (hasRequiredFields)
+    if (hasRequiredFields) {
         passedInterfaceTests++;
+    }
 });
 // Test user scenarios
 console.log("\n3. Testing user interaction scenarios:");
