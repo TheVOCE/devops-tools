@@ -200,8 +200,8 @@ console.log(`✅ Task prompt includes acceptance criteria: ${taskPrompt.includes
 console.log(`✅ Task prompt has description content: ${taskPrompt.includes("OAuth2 support")}`);
 
 console.log("\n=== Work Item Handling Integration Test Complete ===");
-console.log("✅ All integration tests passed! The work item handling correctly:")
-console.log("   - Uses repro steps for bugs instead of description")
-console.log("   - Uses description for non-bugs")
-console.log("   - Always includes acceptance criteria when available")
+console.log("✅ All integration tests passed! The work item handling correctly:");
+console.log("   - Uses repro steps for bugs instead of description");
+console.log("   - Uses description for non-bugs");
+console.log("   - Always includes acceptance criteria when available");
 console.log("   - Constructs appropriate prompts based on work item type");
