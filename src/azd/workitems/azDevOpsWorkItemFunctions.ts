@@ -64,6 +64,11 @@ export function StateMultipleWorkItemsInStream(
       const truncatedDescription = description.length > truncationLength ? description.substring(0, truncationLength) + "..." : description;
       stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
     }
+    else
+    {
+      // If no description, indicate that because otherwise VS Code will show a link to microsoft.com and that's not helpful
+      stream.markdown(`   > No description available.\n`);
+    }
     
     // Add button to open work item in browser using the same pattern as single work item
     stream.button({
