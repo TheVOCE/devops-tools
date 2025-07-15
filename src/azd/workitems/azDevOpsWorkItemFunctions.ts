@@ -9,19 +9,39 @@ import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logInfo } from "../../logging.js";
 import { OPEN_URL_COMMAND, getDescriptionTruncationLength } from "../../consts";
+import * as sanitizeHtml from "sanitize-html";
+
+/**
+ * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
+ * @param content The content to sanitize
+ * @returns Sanitized plain text content
+ */
+function sanitizeWorkItemField(content: string): string {
+  if (!content || typeof content !== 'string') {
+    return '';
+  }
+  
+  // Configure sanitize-html to strip all HTML tags and return plain text
+  return sanitizeHtml(content, {
+    allowedTags: [], // No HTML tags allowed
+    allowedAttributes: {}, // No attributes allowed
+    stripIgnoreTag: true, // Strip tags that are not in allowedTags
+    stripIgnoreTagBody: false // Keep content inside stripped tags
+  }).trim();
+}
 
 export function StateFullWorkItemInStream(
   stream: vscode.ChatResponseStream,
   workItem: { id?: number; fields: { [key: string]: any }; url?: string },
   comments: AzDevOpsComment[]
 ) {
-  const title = workItem.fields["System.Title"];
-  const description = workItem.fields["System.Description"] || "";
-  const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
-  const state = workItem.fields["System.State"] || "Unknown";
-  const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
-  const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
-  const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
+  const title = sanitizeWorkItemField(workItem.fields["System.Title"]);
+  const description = sanitizeWorkItemField(workItem.fields["System.Description"] || "");
+  const workItemType = sanitizeWorkItemField(workItem.fields["System.WorkItemType"] || "Unknown");
+  const state = sanitizeWorkItemField(workItem.fields["System.State"] || "Unknown");
+  const acceptanceCriteria = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
+  const reproSteps = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
+  const systemInfo = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "");
   
   stream.markdown(`🔷Work Item: **${title}**\n`);
   stream.markdown(`Type: ${workItemType}\n`);
@@ -56,7 +76,7 @@ export function StateFullWorkItemInStream(
   if (comments?.length > 0) {
     stream.markdown("_Comments_\n");
     comments?.map((comment) =>
-      stream.markdown(`\n> ${comment.body?.replaceAll("\n", "\n> ") + ""}\n`)
+      stream.markdown(`\n> ${sanitizeWorkItemField(comment.body || "").replaceAll("\n", "\n> ") + ""}\n`)
     );
   }
   
@@ -81,13 +101,13 @@ export function StateMultipleWorkItemsInStream(
   stream.markdown(`🔍 Found ${workItems.length} work item${workItems.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
   
   workItems.forEach((workItem, index) => {
-    const title = workItem.fields["System.Title"] || "Untitled";
-    const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
-    const state = workItem.fields["System.State"] || "Unknown";
-    const description = workItem.fields["System.Description"] || "";
-    const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
-    const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
-    const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
+    const title = sanitizeWorkItemField(workItem.fields["System.Title"] || "Untitled");
+    const workItemType = sanitizeWorkItemField(workItem.fields["System.WorkItemType"] || "Unknown");
+    const state = sanitizeWorkItemField(workItem.fields["System.State"] || "Unknown");
+    const description = sanitizeWorkItemField(workItem.fields["System.Description"] || "");
+    const reproSteps = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
+    const acceptanceCriteria = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
+    const systemInfo = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "");
     
     stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
     
@@ -219,13 +239,13 @@ export async function searchAzdWorkItemsByTitle(
         id: workItem.id,
         fields: {
           ...workItem.fields,
-          "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItem.id}`,
-          "System.Description": workItem.fields?.["System.Description"] || "",
-          "System.State": workItem.fields?.["System.State"] || "Unknown",
-          "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
-          "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
-          "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || "",
-          "Microsoft.VSTS.TCM.SystemInfo": workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || ""
+          "System.Title": sanitizeWorkItemField(workItem.fields?.["System.Title"] || `Work Item ${workItem.id}`),
+          "System.Description": sanitizeWorkItemField(workItem.fields?.["System.Description"] || ""),
+          "System.State": sanitizeWorkItemField(workItem.fields?.["System.State"] || "Unknown"),
+          "System.WorkItemType": sanitizeWorkItemField(workItem.fields?.["System.WorkItemType"] || "Unknown"),
+          "Microsoft.VSTS.Common.AcceptanceCriteria": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || ""),
+          "Microsoft.VSTS.TCM.ReproSteps": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""),
+          "Microsoft.VSTS.TCM.SystemInfo": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || "")
         },
         url: `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
       };
@@ -294,7 +314,7 @@ export async function getWorkItemAndCommentsById(
           comments = commentsResult.comments.map((comment: Comment) => ({
             id: comment.id || 0,
             url: comment.url || "",
-            body: comment.text || ""
+            body: sanitizeWorkItemField(comment.text || "")
           }));
         }
       } catch (commentsErr) {
@@ -308,13 +328,13 @@ export async function getWorkItemAndCommentsById(
       id: workItem.id || workItemId,
       fields: {
         ...workItem.fields,
-        "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItemId}`,
-        "System.Description": workItem.fields?.["System.Description"] || "",
-        "System.State": workItem.fields?.["System.State"] || "Unknown",
-        "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
-        "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
-        "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || "",
-        "Microsoft.VSTS.TCM.SystemInfo": workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || ""
+        "System.Title": sanitizeWorkItemField(workItem.fields?.["System.Title"] || `Work Item ${workItemId}`),
+        "System.Description": sanitizeWorkItemField(workItem.fields?.["System.Description"] || ""),
+        "System.State": sanitizeWorkItemField(workItem.fields?.["System.State"] || "Unknown"),
+        "System.WorkItemType": sanitizeWorkItemField(workItem.fields?.["System.WorkItemType"] || "Unknown"),
+        "Microsoft.VSTS.Common.AcceptanceCriteria": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || ""),
+        "Microsoft.VSTS.TCM.ReproSteps": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""),
+        "Microsoft.VSTS.TCM.SystemInfo": sanitizeWorkItemField(workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || "")
       },
       url: `${orgUrl}/${project}/_workitems/edit/${workItemId}`
     };

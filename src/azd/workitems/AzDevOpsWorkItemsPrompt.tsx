@@ -16,6 +16,26 @@ import type { AzDevOpsResult } from "../AzDevOpsResult";
 import { parseAzDevOpsValuesFromPrompt } from "../azDevOpsUtils";
 import { AzDevOpsWorkItemsPromptProps } from "./AzDevOpsWorkItemsPromptProps";
 import { AzDevOpsWorkItemsPromptState } from "./AzDevOpsWorkItemsPromptState";
+import * as sanitizeHtml from "sanitize-html";
+
+/**
+ * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
+ * @param content The content to sanitize
+ * @returns Sanitized plain text content
+ */
+function sanitizeWorkItemField(content: string): string {
+  if (!content || typeof content !== 'string') {
+    return '';
+  }
+  
+  // Configure sanitize-html to strip all HTML tags and return plain text
+  return sanitizeHtml(content, {
+    allowedTags: [], // No HTML tags allowed
+    allowedAttributes: {}, // No attributes allowed
+    stripIgnoreTag: true, // Strip tags that are not in allowedTags
+    stripIgnoreTagBody: false // Keep content inside stripped tags
+  }).trim();
+}
 
 export class AzDevOpsWorkItemsPrompt extends PromptElement<
   AzDevOpsWorkItemsPromptProps,
@@ -62,9 +82,9 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
         stream.markdown(`🔍 Found ${azdoResults.length} work item${azdoResults.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
         azdoResults.forEach((result, index) => {
           if (result.data) {
-            const title = result.data.fields["System.Title"];
-            const workItemType = result.data.fields["System.WorkItemType"];
-            const state = result.data.fields["System.State"];
+            const title = sanitizeWorkItemField(result.data.fields["System.Title"]);
+            const workItemType = sanitizeWorkItemField(result.data.fields["System.WorkItemType"]);
+            const state = sanitizeWorkItemField(result.data.fields["System.State"]);
             stream.markdown(`${index + 1}. 🔷**Work Item #${result.data.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
             stream.button({
               command: OPEN_URL_COMMAND,
@@ -127,13 +147,13 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
     const { userPrompt } = this.props;
     const { azdoResult } = state;
     
-    // Get work item fields
-    const title = azdoResult?.data?.fields["System.Title"];
-    const workItemType = azdoResult?.data?.fields["System.WorkItemType"];
-    const description = azdoResult?.data?.fields["System.Description"] || "";
-    const acceptanceCriteria = azdoResult?.data?.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
-    const reproSteps = azdoResult?.data?.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
-    const systemInfo = azdoResult?.data?.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
+    // Get work item fields and sanitize them for LLM context
+    const title = sanitizeWorkItemField(azdoResult?.data?.fields["System.Title"]);
+    const workItemType = sanitizeWorkItemField(azdoResult?.data?.fields["System.WorkItemType"]);
+    const description = sanitizeWorkItemField(azdoResult?.data?.fields["System.Description"] || "");
+    const acceptanceCriteria = sanitizeWorkItemField(azdoResult?.data?.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
+    const reproSteps = sanitizeWorkItemField(azdoResult?.data?.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
+    const systemInfo = sanitizeWorkItemField(azdoResult?.data?.fields["Microsoft.VSTS.TCM.SystemInfo"] || "");
     
     // Build the context message based on work item type
     let contextMessage = `The work item to work on has the title: "${title}", work item type "${workItemType}"`;
@@ -170,7 +190,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
     if (azdoResult?.comments && azdoResult?.comments?.length > 0) {
       contextMessage += ` Do also regard the comments: ${
         azdoResult?.comments
-          ?.map((comment) => comment.body)
+          ?.map((comment) => sanitizeWorkItemField(comment.body || ""))
           .join("\n\n") + ""
       }`;
     }
