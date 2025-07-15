@@ -14,13 +14,15 @@ const bugWorkItem = {
     "System.State": "Active",
     "System.Description": "This is the description",
     "Microsoft.VSTS.Common.AcceptanceCriteria": "Bug should be fixed",
-    "Microsoft.VSTS.TCM.ReproSteps": "Step 1: Do something\nStep 2: Bug appears"
+    "Microsoft.VSTS.TCM.ReproSteps": "Step 1: Do something\nStep 2: Bug appears",
+    "Microsoft.VSTS.TCM.SystemInfo": "OS: Windows 10\nBrowser: Chrome 120.0.6099.199"
   },
   url: "https://dev.azure.com/org/project/_workitems/edit/123"
 };
 
 console.log(`✅ Bug work item has repro steps: ${!!bugWorkItem.fields["Microsoft.VSTS.TCM.ReproSteps"]}`);
 console.log(`✅ Bug work item has acceptance criteria: ${!!bugWorkItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"]}`);
+console.log(`✅ Bug work item has system info: ${!!bugWorkItem.fields["Microsoft.VSTS.TCM.SystemInfo"]}`);
 console.log(`✅ Work item type is Bug: ${bugWorkItem.fields["System.WorkItemType"] === "Bug"}`);
 
 // Test 2: Verify non-bug work item handling
@@ -48,6 +50,7 @@ function getWorkItemContent(workItem: any) {
   const description = workItem.fields["System.Description"] || "";
   const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
   const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
+  const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
   
   let content = "";
   
@@ -58,7 +61,7 @@ function getWorkItemContent(workItem: any) {
     content = description || "No description";
   }
   
-  return { content, acceptanceCriteria };
+  return { content, acceptanceCriteria, systemInfo };
 }
 
 const bugContent = getWorkItemContent(bugWorkItem);
@@ -67,6 +70,8 @@ const taskContent = getWorkItemContent(taskWorkItem);
 console.log(`✅ Bug content uses repro steps: ${bugContent.content.includes("Step 1")}`);
 console.log(`✅ Task content uses description: ${taskContent.content.includes("task description")}`);
 console.log(`✅ Both have acceptance criteria: ${!!bugContent.acceptanceCriteria && !!taskContent.acceptanceCriteria}`);
+console.log(`✅ Bug has system info: ${!!bugContent.systemInfo}`);
+console.log(`✅ Task doesn't have system info: ${!taskContent.systemInfo}`);
 
 console.log("\n=== Work Item Fields Test Complete ===");
 console.log("✅ All work item field handling tests passed!");

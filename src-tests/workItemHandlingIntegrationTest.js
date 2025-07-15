@@ -29,7 +29,8 @@ const bugWorkItem = {
         "System.State": "Active",
         "System.Description": "This is the description field that should NOT be used for bugs",
         "Microsoft.VSTS.Common.AcceptanceCriteria": "Application should start without crashing\nAll user data should be preserved",
-        "Microsoft.VSTS.TCM.ReproSteps": "1. Open the application\n2. Click on File menu\n3. Application crashes immediately"
+        "Microsoft.VSTS.TCM.ReproSteps": "1. Open the application\n2. Click on File menu\n3. Application crashes immediately",
+        "Microsoft.VSTS.TCM.SystemInfo": "OS: Windows 10 Pro 22H2\nBrowser: Chrome 120.0.6099.199\nResolution: 1920x1080\nRAM: 16GB"
     },
     url: "https://dev.azure.com/org/project/_workitems/edit/123"
 };
@@ -63,6 +64,7 @@ function mockStateFullWorkItemInStream(stream, workItem, comments = []) {
     const state = workItem.fields["System.State"] || "Unknown";
     const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
     const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+    const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
     stream.markdown(`🔷Work Item: **${title}**\n`);
     stream.markdown(`Type: ${workItemType}\n`);
     stream.markdown(`State: ${state}\n\n`);
@@ -71,6 +73,11 @@ function mockStateFullWorkItemInStream(stream, workItem, comments = []) {
         if (reproSteps) {
             stream.markdown("**Repro Steps:**\n");
             stream.markdown(reproSteps.replaceAll("\n", "\n> ") + "\n\n");
+        }
+        // Add system info for bugs
+        if (systemInfo) {
+            stream.markdown("**System Info:**\n");
+            stream.markdown(systemInfo.replaceAll("\n", "\n> ") + "\n\n");
         }
     }
     else {
@@ -102,6 +109,7 @@ function buildWorkItemPrompt(workItem, userPrompt, comments = []) {
     const description = workItem.fields["System.Description"] || "";
     const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
     const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+    const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
     let contextMessage = `The work item to work on has the title: "${title}", work item type "${workItemType}"`;
     // For bugs, use repro steps instead of description
     if (workItemType?.toLowerCase() === "bug") {
@@ -110,6 +118,10 @@ function buildWorkItemPrompt(workItem, userPrompt, comments = []) {
         }
         else {
             contextMessage += " and no repro steps provided";
+        }
+        // Add system info for bugs
+        if (systemInfo) {
+            contextMessage += `. The system info is: ${systemInfo}`;
         }
     }
     else {
@@ -140,7 +152,9 @@ const bugOutput = bugStream.getOutput();
 console.log(`✅ Bug shows repro steps: ${bugOutput.includes("**Repro Steps:**")}`);
 console.log(`✅ Bug doesn't show description: ${!bugOutput.includes("**Description:**")}`);
 console.log(`✅ Bug shows acceptance criteria: ${bugOutput.includes("**Acceptance Criteria:**")}`);
+console.log(`✅ Bug shows system info: ${bugOutput.includes("**System Info:**")}`);
 console.log(`✅ Bug shows correct repro content: ${bugOutput.includes("1. Open the application")}`);
+console.log(`✅ Bug shows correct system info: ${bugOutput.includes("Windows 10 Pro")}`);
 // Test 2: Task work item display
 console.log("\nTest 2: Task work item display");
 const taskStream = new MockStream();
@@ -148,6 +162,7 @@ mockStateFullWorkItemInStream(taskStream, taskWorkItem);
 const taskOutput = taskStream.getOutput();
 console.log(`✅ Task shows description: ${taskOutput.includes("**Description:**")}`);
 console.log(`✅ Task doesn't show repro steps: ${!taskOutput.includes("**Repro Steps:**")}`);
+console.log(`✅ Task doesn't show system info: ${!taskOutput.includes("**System Info:**")}`);
 console.log(`✅ Task shows acceptance criteria: ${taskOutput.includes("**Acceptance Criteria:**")}`);
 console.log(`✅ Task shows correct description content: ${taskOutput.includes("OAuth2 support")}`);
 // Test 3: User Story work item display
@@ -164,12 +179,15 @@ const bugPrompt = buildWorkItemPrompt(bugWorkItem, "How should I fix this bug?")
 console.log(`✅ Bug prompt uses repro steps: ${bugPrompt.includes("repro steps:")}`);
 console.log(`✅ Bug prompt doesn't mention description: ${!bugPrompt.includes("description:")}`);
 console.log(`✅ Bug prompt includes acceptance criteria: ${bugPrompt.includes("acceptance criteria are:")}`);
+console.log(`✅ Bug prompt includes system info: ${bugPrompt.includes("system info is:")}`);
 console.log(`✅ Bug prompt has repro steps content: ${bugPrompt.includes("Click on File menu")}`);
+console.log(`✅ Bug prompt has system info content: ${bugPrompt.includes("Windows 10 Pro")}`);
 // Test 5: Task prompt construction
 console.log("\nTest 5: Task prompt construction");
 const taskPrompt = buildWorkItemPrompt(taskWorkItem, "What's the best approach for this task?");
 console.log(`✅ Task prompt uses description: ${taskPrompt.includes("description:")}`);
 console.log(`✅ Task prompt doesn't mention repro steps: ${!taskPrompt.includes("repro steps:")}`);
+console.log(`✅ Task prompt doesn't mention system info: ${!taskPrompt.includes("system info:")}`);
 console.log(`✅ Task prompt includes acceptance criteria: ${taskPrompt.includes("acceptance criteria are:")}`);
 console.log(`✅ Task prompt has description content: ${taskPrompt.includes("OAuth2 support")}`);
 console.log("\n=== Work Item Handling Integration Test Complete ===");
@@ -177,5 +195,6 @@ console.log("✅ All integration tests passed! The work item handling correctly:
 console.log("   - Uses repro steps for bugs instead of description");
 console.log("   - Uses description for non-bugs");
 console.log("   - Always includes acceptance criteria when available");
+console.log("   - Includes system info for bugs when available");
 console.log("   - Constructs appropriate prompts based on work item type");
 //# sourceMappingURL=workItemHandlingIntegrationTest.js.map

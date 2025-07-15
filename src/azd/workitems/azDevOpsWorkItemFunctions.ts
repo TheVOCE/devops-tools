@@ -21,6 +21,7 @@ export function StateFullWorkItemInStream(
   const state = workItem.fields["System.State"] || "Unknown";
   const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
   const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+  const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
   
   stream.markdown(`🔷Work Item: **${title}**\n`);
   stream.markdown(`Type: ${workItemType}\n`);
@@ -31,6 +32,12 @@ export function StateFullWorkItemInStream(
     if (reproSteps) {
       stream.markdown("**Repro Steps:**\n");
       stream.markdown(reproSteps.replaceAll("\n", "\n> ") + "\n\n");
+    }
+    
+    // Add system info for bugs
+    if (systemInfo) {
+      stream.markdown("**System Info:**\n");
+      stream.markdown(systemInfo.replaceAll("\n", "\n> ") + "\n\n");
     }
   } else {
     // For non-bugs, use description
@@ -80,6 +87,7 @@ export function StateMultipleWorkItemsInStream(
     const description = workItem.fields["System.Description"] || "";
     const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
     const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
+    const systemInfo = workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
     
     stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
     
@@ -92,6 +100,7 @@ export function StateMultipleWorkItemsInStream(
     }
     
     if (contentToShow && contentToShow.length > 0) {
+      const truncationLength = getDescriptionTruncationLength();
       const truncatedContent = contentToShow.length > truncationLength ? contentToShow.substring(0, truncationLength) + "..." : contentToShow;
       stream.markdown(`   > ${truncatedContent.replaceAll("\n", " ")}\n`);
     } else {
@@ -129,7 +138,8 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
       "System.State": "Active",
       "System.WorkItemType": "Task",
       "Microsoft.VSTS.Common.AcceptanceCriteria": "Mock acceptance criteria for testing purposes.",
-      "Microsoft.VSTS.TCM.ReproSteps": "Mock repro steps for bug testing."
+      "Microsoft.VSTS.TCM.ReproSteps": "Mock repro steps for bug testing.",
+      "Microsoft.VSTS.TCM.SystemInfo": "OS: Windows 10\nBrowser: Chrome 120.0.6099.199\nResolution: 1920x1080"
     },
     url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
   };
@@ -159,7 +169,7 @@ export async function searchAzdWorkItemsByTitle(
     // Use WIQL (Work Item Query Language) to search for work items by title
     const wiql = {
       query: `SELECT [System.Id], [System.Title], [System.Description], [System.WorkItemType], [System.State], 
-              [Microsoft.VSTS.Common.AcceptanceCriteria], [Microsoft.VSTS.TCM.ReproSteps]
+              [Microsoft.VSTS.Common.AcceptanceCriteria], [Microsoft.VSTS.TCM.ReproSteps], [Microsoft.VSTS.TCM.SystemInfo]
               FROM WorkItems 
               WHERE [System.TeamProject] = '${project}' 
               AND [System.Title] CONTAINS '${searchQuery.replace(/'/g, "''")}' 
@@ -214,7 +224,8 @@ export async function searchAzdWorkItemsByTitle(
           "System.State": workItem.fields?.["System.State"] || "Unknown",
           "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
           "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
-          "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""
+          "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || "",
+          "Microsoft.VSTS.TCM.SystemInfo": workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || ""
         },
         url: `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
       };
@@ -302,7 +313,8 @@ export async function getWorkItemAndCommentsById(
         "System.State": workItem.fields?.["System.State"] || "Unknown",
         "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
         "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
-        "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""
+        "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || "",
+        "Microsoft.VSTS.TCM.SystemInfo": workItem.fields?.["Microsoft.VSTS.TCM.SystemInfo"] || ""
       },
       url: `${orgUrl}/${project}/_workitems/edit/${workItemId}`
     };

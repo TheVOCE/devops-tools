@@ -133,6 +133,7 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
     const description = azdoResult?.data?.fields["System.Description"] || "";
     const acceptanceCriteria = azdoResult?.data?.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
     const reproSteps = azdoResult?.data?.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+    const systemInfo = azdoResult?.data?.fields["Microsoft.VSTS.TCM.SystemInfo"] || "";
     
     // Build the context message based on work item type
     let contextMessage = `The work item to work on has the title: "${title}", work item type "${workItemType}"`;
@@ -143,6 +144,11 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
         contextMessage += ` and the repro steps: ${reproSteps}`;
       } else {
         contextMessage += " and no repro steps provided";
+      }
+      
+      // Add system info for bugs
+      if (systemInfo) {
+        contextMessage += `. The system info is: ${systemInfo}`;
       }
     } else {
       // For non-bugs, use description
