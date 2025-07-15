@@ -92,7 +92,6 @@ export function StateMultipleWorkItemsInStream(
     }
     
     if (contentToShow && contentToShow.length > 0) {
-      const truncationLength = getDescriptionTruncationLength();
       const truncatedContent = contentToShow.length > truncationLength ? contentToShow.substring(0, truncationLength) + "..." : contentToShow;
       stream.markdown(`   > ${truncatedContent.replaceAll("\n", " ")}\n`);
     } else {
