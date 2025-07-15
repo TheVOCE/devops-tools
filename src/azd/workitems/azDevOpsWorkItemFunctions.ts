@@ -20,9 +20,14 @@ function sanitizeWorkItemField(content: string): string {
   if (!content || typeof content !== 'string') {
     return '';
   }
-  
+
   // Configure sanitize-html to strip all HTML tags and return plain text
-  return sanitizeHtml(content).trim();
+  return sanitizeHtml(content, {
+    allowedTags: ['b', 'i', 'em', 'strong', 'a','br'],
+    allowedAttributes: {
+      'a': ['href']
+    }
+  }).trim();
 }
 
 export function StateFullWorkItemInStream(
@@ -37,18 +42,18 @@ export function StateFullWorkItemInStream(
   const acceptanceCriteria = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
   const reproSteps = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
   const systemInfo = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "");
-  
+
   stream.markdown(`🔷Work Item: **${title}**\n`);
   stream.markdown(`Type: ${workItemType}\n`);
   stream.markdown(`State: ${state}\n\n`);
-  
+
   // For bugs, use repro steps instead of description
   if (workItemType.toLowerCase() === "bug") {
     if (reproSteps) {
       stream.markdown("**Repro Steps:**\n");
       stream.markdown(reproSteps.replaceAll("\n", "\n> ") + "\n\n");
     }
-    
+
     // Add system info for bugs
     if (systemInfo) {
       stream.markdown("**System Info:**\n");
@@ -61,20 +66,20 @@ export function StateFullWorkItemInStream(
       stream.markdown(description.replaceAll("\n", "\n> ") + "\n\n");
     }
   }
-  
+
   // Always include acceptance criteria if available
   if (acceptanceCriteria) {
     stream.markdown("**Acceptance Criteria:**\n");
     stream.markdown(acceptanceCriteria.replaceAll("\n", "\n> ") + "\n\n");
   }
-  
+
   if (comments?.length > 0) {
     stream.markdown("_Comments_\n");
     comments?.map((comment) =>
       stream.markdown(`\n> ${sanitizeWorkItemField(comment.body || "").replaceAll("\n", "\n> ") + ""}\n`)
     );
   }
-  
+
   // Add button to open work item in browser if URL is available
   if (workItem.url && workItem.id) {
     stream.markdown("\n\n");
@@ -84,7 +89,7 @@ export function StateFullWorkItemInStream(
       arguments: [workItem.url],
     });
   }
-  
+
   stream.markdown("\n\n----\n\n");
 }
 
@@ -94,7 +99,7 @@ export function StateMultipleWorkItemsInStream(
   searchQuery: string
 ) {
   stream.markdown(`🔍 Found ${workItems.length} work item${workItems.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
-  
+
   workItems.forEach((workItem, index) => {
     const title = sanitizeWorkItemField(workItem.fields["System.Title"] || "Untitled");
     const workItemType = sanitizeWorkItemField(workItem.fields["System.WorkItemType"] || "Unknown");
@@ -103,9 +108,9 @@ export function StateMultipleWorkItemsInStream(
     const reproSteps = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "");
     const acceptanceCriteria = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "");
     const systemInfo = sanitizeWorkItemField(workItem.fields["Microsoft.VSTS.TCM.SystemInfo"] || "");
-    
+
     stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
-    
+
     // Show first configured characters of description (for bugs, use repro steps instead)
     let contentToShow = "";
     if (workItemType.toLowerCase() === "bug" && reproSteps) {
@@ -113,7 +118,7 @@ export function StateMultipleWorkItemsInStream(
     } else if (description) {
       contentToShow = description;
     }
-    
+
     if (contentToShow && contentToShow.length > 0) {
       const truncationLength = getDescriptionTruncationLength();
       const truncatedContent = contentToShow.length > truncationLength ? contentToShow.substring(0, truncationLength) + "..." : contentToShow;
@@ -122,24 +127,24 @@ export function StateMultipleWorkItemsInStream(
       // If no description/repro steps, indicate that because otherwise VS Code will show a link to microsoft.com and that's not helpful
       stream.markdown(`   > No ${workItemType.toLowerCase() === "bug" ? "repro steps" : "description"} available.\n`);
     }
-    
+
     // Show acceptance criteria if available (truncated)
     if (acceptanceCriteria && acceptanceCriteria.length > 0) {
       const truncationLength = getDescriptionTruncationLength();
       const truncatedCriteria = acceptanceCriteria.length > truncationLength ? acceptanceCriteria.substring(0, truncationLength) + "..." : acceptanceCriteria;
       stream.markdown(`   > **Acceptance Criteria:** ${truncatedCriteria.replaceAll("\n", " ")}\n`);
     }
-    
+
     // Add button to open work item in browser using the same pattern as single work item
     stream.button({
       command: OPEN_URL_COMMAND,
       title: vscode.l10n.t("Open Work Item #" + workItem.id + " in Browser"),
       arguments: [workItem.url],
     });
-    
+
     stream.markdown("\n");
   });
-  
+
   stream.markdown("---\n\n");
 }
 
@@ -176,11 +181,11 @@ export async function searchAzdWorkItemsByTitle(
 
   const orgUrl = `https://dev.azure.com/${org}`;
   let useMockData = false;
-  
+
   try {
     const connection = await getAzureDevOpsConnection(orgUrl);
     const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
-    
+
     // Use WIQL (Work Item Query Language) to search for work items by title
     const wiql = {
       query: `SELECT [System.Id], [System.Title], [System.Description], [System.WorkItemType], [System.State], 
@@ -190,16 +195,16 @@ export async function searchAzdWorkItemsByTitle(
               AND [System.Title] CONTAINS '${searchQuery.replace(/'/g, "''")}' 
               ORDER BY [System.ChangedDate] DESC`
     };
-    
+
     const queryResult = await witApi.queryByWiql(wiql, { projectId: project, project });
-    
+
     if (!queryResult.workItems || queryResult.workItems.length === 0) {
       throw new Error(`No work items found with title containing "${searchQuery}" in project '${project}'.`);
     }
 
     // Limit to 10 results to avoid overwhelming the user
     const limitedWorkItems = queryResult.workItems.slice(0, 10);
-    
+
     // Get full work item details for each result
     const workItemIds = limitedWorkItems.map(wi => wi.id!);
     const fullWorkItems = await witApi.getWorkItems(workItemIds, undefined, undefined, WorkItemExpand.All);
@@ -210,7 +215,7 @@ export async function searchAzdWorkItemsByTitle(
       if (!workItem.id) {
         continue;
       }
-      
+
       let comments: AzDevOpsComment[] = [];
       if (withComments) {
         try {
@@ -253,7 +258,7 @@ export async function searchAzdWorkItemsByTitle(
     if (err instanceof Error && err.message.includes('No work items found')) {
       throw err;
     }
-    
+
     // If API call fails (e.g., no PAT token), provide helpful message
     requestHandlerContext.stream.progress("⚠️ Work item search requires Azure DevOps PAT token configuration");
     throw new Error(`Error searching work items with title "${searchQuery}" in project '${project}': ${err}. Configure Azure DevOps PAT for real data.`);
@@ -275,17 +280,17 @@ export async function getWorkItemAndCommentsById(
   );
 
   const orgUrl = `https://dev.azure.com/${org}`;
-  
+
   let workItem: WorkItem;
   let useMockData = false;
-  
+
   try {
     const connection = await getAzureDevOpsConnection(orgUrl);
     const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
-    
+
     // Get work item with all fields
     workItem = await witApi.getWorkItem(workItemId, undefined, undefined, WorkItemExpand.All);
-    
+
     if (!workItem) {
       throw new Error(`Work item !${workItemId} not found`);
     }
@@ -302,7 +307,7 @@ export async function getWorkItemAndCommentsById(
       try {
         const connection = await getAzureDevOpsConnection(orgUrl);
         const witApi: IWorkItemTrackingApi = await connection.getWorkItemTrackingApi();
-        
+
         // Get work item comments
         const commentsResult = await witApi.getComments(project, workItemId);
         if (commentsResult && commentsResult.comments) {
