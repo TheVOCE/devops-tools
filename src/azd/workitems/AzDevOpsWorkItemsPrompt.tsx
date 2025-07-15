@@ -126,18 +126,54 @@ export class AzDevOpsWorkItemsPrompt extends PromptElement<
   render(state: AzDevOpsWorkItemsPromptState, sizing: PromptSizing) {
     const { userPrompt } = this.props;
     const { azdoResult } = state;
+    
+    // Get work item fields
+    const title = azdoResult?.data?.fields["System.Title"];
+    const workItemType = azdoResult?.data?.fields["System.WorkItemType"];
+    const description = azdoResult?.data?.fields["System.Description"] || "";
+    const acceptanceCriteria = azdoResult?.data?.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
+    const reproSteps = azdoResult?.data?.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+    
+    // Build the context message based on work item type
+    let contextMessage = `The work item to work on has the title: "${title}", work item type "${workItemType}"`;
+    
+    // For bugs, use repro steps instead of description
+    if (workItemType?.toLowerCase() === "bug") {
+      if (reproSteps) {
+        contextMessage += ` and the repro steps: ${reproSteps}`;
+      } else {
+        contextMessage += " and no repro steps provided";
+      }
+    } else {
+      // For non-bugs, use description
+      if (description) {
+        contextMessage += ` and the description: ${description}`;
+      } else {
+        contextMessage += " and no description provided";
+      }
+    }
+    
+    // Always include acceptance criteria if available
+    if (acceptanceCriteria) {
+      contextMessage += `. The acceptance criteria are: ${acceptanceCriteria}`;
+    }
+    
+    contextMessage += ". Use that information to give better answer for the following user query.";
+    
+    // Add comments if available
+    if (azdoResult?.comments && azdoResult?.comments?.length > 0) {
+      contextMessage += ` Do also regard the comments: ${
+        azdoResult?.comments
+          ?.map((comment) => comment.body)
+          .join("\n\n") + ""
+      }`;
+    }
+    
     return (
       <>
         <AssistantMessage priority={300}>{ASSISTANT_MESSAGE}</AssistantMessage>
         <UserMessage priority={200}>
-          {`The work item to work on has the title: "${azdoResult?.data?.fields["System.Title"]}", work item type "${azdoResult?.data?.fields["System.WorkItemType"]}"  and the description: ${azdoResult?.data?.fields["System.Description"] || "No description"}. Use that information to give better answer for the following user query.` +
-            (azdoResult?.comments && azdoResult?.comments?.length > 0
-              ? `Do also regard the comments: ${
-                  azdoResult?.comments
-                    ?.map((comment) => comment.body)
-                    .join("\n\n") + ""
-                }`
-              : "")}
+          {contextMessage}
         </UserMessage>
         <UserMessage priority={100}>{userPrompt}</UserMessage>
       </>

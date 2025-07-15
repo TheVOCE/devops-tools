@@ -19,13 +19,35 @@ export function StateFullWorkItemInStream(
   const description = workItem.fields["System.Description"] || "";
   const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
   const state = workItem.fields["System.State"] || "Unknown";
+  const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
+  const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
   
   stream.markdown(`🔷Work Item: **${title}**\n`);
   stream.markdown(`Type: ${workItemType}\n`);
   stream.markdown(`State: ${state}\n\n`);
-  stream.markdown(description.replaceAll("\n", "\n> ") + "");
+  
+  // For bugs, use repro steps instead of description
+  if (workItemType.toLowerCase() === "bug") {
+    if (reproSteps) {
+      stream.markdown("**Repro Steps:**\n");
+      stream.markdown(reproSteps.replaceAll("\n", "\n> ") + "\n\n");
+    }
+  } else {
+    // For non-bugs, use description
+    if (description) {
+      stream.markdown("**Description:**\n");
+      stream.markdown(description.replaceAll("\n", "\n> ") + "\n\n");
+    }
+  }
+  
+  // Always include acceptance criteria if available
+  if (acceptanceCriteria) {
+    stream.markdown("**Acceptance Criteria:**\n");
+    stream.markdown(acceptanceCriteria.replaceAll("\n", "\n> ") + "\n\n");
+  }
+  
   if (comments?.length > 0) {
-    stream.markdown("\n\n_Comments_\n");
+    stream.markdown("_Comments_\n");
     comments?.map((comment) =>
       stream.markdown(`\n> ${comment.body?.replaceAll("\n", "\n> ") + ""}\n`)
     );
@@ -56,18 +78,33 @@ export function StateMultipleWorkItemsInStream(
     const workItemType = workItem.fields["System.WorkItemType"] || "Unknown";
     const state = workItem.fields["System.State"] || "Unknown";
     const description = workItem.fields["System.Description"] || "";
+    const reproSteps = workItem.fields["Microsoft.VSTS.TCM.ReproSteps"] || "";
+    const acceptanceCriteria = workItem.fields["Microsoft.VSTS.Common.AcceptanceCriteria"] || "";
     
     stream.markdown(`${index + 1}. 🔷**Work Item #${workItem.id}** [_${workItemType}_] [_${state}_]: **${title}**\n`);
-    // Show first configured characters of description
-    if (description && description.length > 0) {
-      const truncationLength = getDescriptionTruncationLength();
-      const truncatedDescription = description.length > truncationLength ? description.substring(0, truncationLength) + "..." : description;
-      stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
+    
+    // Show first configured characters of description (for bugs, use repro steps instead)
+    let contentToShow = "";
+    if (workItemType.toLowerCase() === "bug" && reproSteps) {
+      contentToShow = reproSteps;
+    } else if (description) {
+      contentToShow = description;
     }
-    else
-    {
-      // If no description, indicate that because otherwise VS Code will show a link to microsoft.com and that's not helpful
-      stream.markdown(`   > No description available.\n`);
+    
+    if (contentToShow && contentToShow.length > 0) {
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedContent = contentToShow.length > truncationLength ? contentToShow.substring(0, truncationLength) + "..." : contentToShow;
+      stream.markdown(`   > ${truncatedContent.replaceAll("\n", " ")}\n`);
+    } else {
+      // If no description/repro steps, indicate that because otherwise VS Code will show a link to microsoft.com and that's not helpful
+      stream.markdown(`   > No ${workItemType.toLowerCase() === "bug" ? "repro steps" : "description"} available.\n`);
+    }
+    
+    // Show acceptance criteria if available (truncated)
+    if (acceptanceCriteria && acceptanceCriteria.length > 0) {
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedCriteria = acceptanceCriteria.length > truncationLength ? acceptanceCriteria.substring(0, truncationLength) + "..." : acceptanceCriteria;
+      stream.markdown(`   > **Acceptance Criteria:** ${truncatedCriteria.replaceAll("\n", " ")}\n`);
     }
     
     // Add button to open work item in browser using the same pattern as single work item
@@ -91,7 +128,9 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
       "System.Title": `Mock Work Item ${workItemId}`,
       "System.Description": "This is mock data. Configure Azure DevOps PAT token for real data.",
       "System.State": "Active",
-      "System.WorkItemType": "Task"
+      "System.WorkItemType": "Task",
+      "Microsoft.VSTS.Common.AcceptanceCriteria": "Mock acceptance criteria for testing purposes.",
+      "Microsoft.VSTS.TCM.ReproSteps": "Mock repro steps for bug testing."
     },
     url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
   };
@@ -120,7 +159,8 @@ export async function searchAzdWorkItemsByTitle(
     
     // Use WIQL (Work Item Query Language) to search for work items by title
     const wiql = {
-      query: `SELECT [System.Id], [System.Title], [System.Description], [System.WorkItemType], [System.State] 
+      query: `SELECT [System.Id], [System.Title], [System.Description], [System.WorkItemType], [System.State], 
+              [Microsoft.VSTS.Common.AcceptanceCriteria], [Microsoft.VSTS.TCM.ReproSteps]
               FROM WorkItems 
               WHERE [System.TeamProject] = '${project}' 
               AND [System.Title] CONTAINS '${searchQuery.replace(/'/g, "''")}' 
@@ -173,7 +213,9 @@ export async function searchAzdWorkItemsByTitle(
           "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItem.id}`,
           "System.Description": workItem.fields?.["System.Description"] || "",
           "System.State": workItem.fields?.["System.State"] || "Unknown",
-          "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
+          "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
+          "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
+          "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""
         },
         url: `${orgUrl}/${project}/_workitems/edit/${workItem.id}`
       };
@@ -259,7 +301,9 @@ export async function getWorkItemAndCommentsById(
         "System.Title": workItem.fields?.["System.Title"] || `Work Item ${workItemId}`,
         "System.Description": workItem.fields?.["System.Description"] || "",
         "System.State": workItem.fields?.["System.State"] || "Unknown",
-        "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown"
+        "System.WorkItemType": workItem.fields?.["System.WorkItemType"] || "Unknown",
+        "Microsoft.VSTS.Common.AcceptanceCriteria": workItem.fields?.["Microsoft.VSTS.Common.AcceptanceCriteria"] || "",
+        "Microsoft.VSTS.TCM.ReproSteps": workItem.fields?.["Microsoft.VSTS.TCM.ReproSteps"] || ""
       },
       url: `${orgUrl}/${project}/_workitems/edit/${workItemId}`
     };
