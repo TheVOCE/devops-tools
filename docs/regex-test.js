@@ -30,8 +30,8 @@ function testGitHubRegex(customHostname, remoteUrl) {
 
 // Test Azure DevOps hostname detection
 function testAzureDevOpsRegex(customHostname, remoteUrl) {
-    const azDevOpsHostname = mockConfig(customHostname) || "dev.azure.com";
-    const escapedHostname = azDevOpsHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+    const azDevOpsHostname = (mockConfig(customHostname) || "dev.azure.com").replace(/\./g, '\\.');
+    const escapedHostname = azDevOpsHostname.replace(/\\/g, '\\\\');
     
     console.log(`Testing Azure DevOps hostname: ${azDevOpsHostname}`);
     console.log(`Remote URL: ${remoteUrl}`);
