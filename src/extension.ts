@@ -8,6 +8,7 @@ import { handleGhPullrequestCommand } from "./github/pullrequests/gitHubPullrequ
 import { parseLLMBasedCommand, hasValidParseResults } from "./llmBasedParser.js";
 import { parseAzDevOpsValuesFromPromptSilent } from "./azd/azDevOpsUtils.js";
 import { parseGitHubValuesFromPromptSilent } from "./github/gitHubUtils.js";
+import { initializeOutputChannel, logInfo, logError, disposeOutputChannel } from "./logging.js";
 
 const PARTICIPANT_ID = "voce.devops";
 
@@ -19,10 +20,10 @@ export async function getDefaultCopilotModel(): Promise<vscode.LanguageModelChat
   try {
     // First try to get the default Copilot model (fast and cheap)
     const [model] = await vscode.lm.selectChatModels({ vendor: "copilot" });
-    console.log("Selected default Copilot model for LLM parsing:", model?.family || "unknown");
+    logInfo(`Selected default Copilot model for LLM parsing: ${model?.family || "unknown"}`);
     return model || null;
   } catch (err) {
-    console.error("Error selecting default Copilot model:", err);
+    logError(`Error selecting default Copilot model: ${err}`);
     return null;
   }
 }
@@ -51,14 +52,14 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
           modelOptions.family = preferredModel;
         }
         
-        console.log(`Trying user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
+        logInfo(`Trying user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
         const [model] = await vscode.lm.selectChatModels(modelOptions);
         if (model) {
-          console.log(`Using user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
+          logInfo(`Using user preferred model: ${preferredVendor || 'copilot'}/${preferredModel || 'default'}`);
           return model;
         }
       } catch (err) {
-        console.log(`User preferred model '${preferredVendor || 'copilot'}/${preferredModel || 'default'}' not available, trying fallbacks`);
+        logInfo(`User preferred model '${preferredVendor || 'copilot'}/${preferredModel || 'default'}' not available, trying fallbacks`);
       }
       
       // If user specified both vendor and family but it failed, try default vendor with user's family
@@ -68,13 +69,13 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
             vendor: "copilot",
             family: preferredModel,
           });
-          console.log(`Trying to fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
+          logInfo(`Trying to fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
           if (model) {
-            console.log(`Fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
+            logInfo(`Fallback: using default vendor 'copilot' with user's preferred family '${preferredModel}'`);
             return model;
           }
         } catch (err) {
-          console.log(`Fallback with default vendor and user family '${preferredModel}' also failed`);
+          logInfo(`Fallback with default vendor and user family '${preferredModel}' also failed`);
         }
       }
     }
@@ -82,7 +83,7 @@ export async function getUserPreferredModel(): Promise<vscode.LanguageModelChat 
     // Fall back to default model
     return await getDefaultCopilotModel();
   } catch (err) {
-    console.error("Error selecting user preferred model:", err);
+    logError(`Error selecting user preferred model: ${err}`);
     return null;
   }
 }
@@ -100,13 +101,15 @@ interface IVoceChatResult extends vscode.ChatResult {
 function createFormattedPrompt(originalPrompt: string, parseResult: any): string {
   let formattedPrompt = originalPrompt;
   
-  // Add the item ID in the expected format if not already present
-  if (parseResult.itemId && !originalPrompt.includes(`!${parseResult.itemId}`)) {
+  // For ID-based searches, add the item ID in the expected format if not already present
+  if (parseResult.searchType === 'id' && parseResult.itemId && !originalPrompt.includes(`!${parseResult.itemId}`)) {
     formattedPrompt += ` !${parseResult.itemId}`;
   }
   
+  // For title-based searches, we don't need to add the !ID format since we'll handle it differently
+  
   // Add comments marker if requested
-  if (parseResult.commentsUsage && !originalPrompt.includes('+')) {
+  if (parseResult.commentsUsage && parseResult.itemId && !originalPrompt.includes('+')) {
     formattedPrompt = formattedPrompt.replace(`!${parseResult.itemId}`, `!${parseResult.itemId}+`);
   }
   
@@ -128,6 +131,9 @@ function createFormattedPrompt(originalPrompt: string, parseResult: any): string
 }
 
 export function activate(vscontext: vscode.ExtensionContext) {
+  // Initialize the output channel for logging
+  initializeOutputChannel();
+  
   const handler: vscode.ChatRequestHandler = async (
     request: vscode.ChatRequest,
     context: vscode.ChatContext,
@@ -165,7 +171,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
       try {
         await handleAzDoPullrequestCommand(requestHandlerContext);
       } catch (err) {
-        console.error("Error handling azd-pullrequest command:", err);
+        logError(`Error handling azd-pullrequest command: ${err}`);
         stream.markdown(
           "Sorry, an error occurred while processing the Azure DevOps pull request command."
         );
@@ -206,8 +212,10 @@ export function activate(vscontext: vscode.ExtensionContext) {
           const modifiedRequest: vscode.ChatRequest = {
             ...request,
             command: llmParseResult.command,
-            // Inject the parsed information into the prompt in the expected format
-            prompt: createFormattedPrompt(request.prompt, llmParseResult)
+            // For title searches, add the search query to the prompt, for ID searches use formatted prompt
+            prompt: llmParseResult.searchType === 'title' 
+              ? `${request.prompt} searchQuery:${llmParseResult.searchQuery || ''}`
+              : createFormattedPrompt(request.prompt, llmParseResult)
           };
 
           const modifiedContext: RequestHandlerContext = {
@@ -230,7 +238,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
               try {
                 await handleAzDoPullrequestCommand(modifiedContext);
               } catch (err) {
-                console.error("Error handling azd-pullrequest command:", err);
+                logError(`Error handling azd-pullrequest command: ${err}`);
                 stream.markdown(
                   "Sorry, an error occurred while processing the Azure DevOps pull request command."
                 );
@@ -252,7 +260,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
           } catch (err) {
             // Handle errors from the language model
             if (err instanceof vscode.LanguageModelError) {
-              console.log(err.message, err.code, err.cause);
+              logError(`Language model error: ${err.message}, code: ${err.code}, cause: ${err.cause}`);
               stream.markdown(
                 "Sorry, I encountered an issue processing your request."
               );
@@ -272,7 +280,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
         } catch (err) {
           // Handle errors from the language model
           if (err instanceof vscode.LanguageModelError) {
-            console.log(err.message, err.code, err.cause);
+            logError(`Language model error: ${err.message}, code: ${err.code}, cause: ${err.cause}`);
             stream.markdown(
               "Sorry, I encountered an issue processing your request."
             );
@@ -316,4 +324,7 @@ export function activate(vscontext: vscode.ExtensionContext) {
   // );
 }
 
-export function deactivate() { }
+export function deactivate() {
+  // Clean up the output channel
+  disposeOutputChannel();
+}

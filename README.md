@@ -6,14 +6,15 @@ This Visual Studio Code Extension enriches Copilot with data from GitHub issues/
 
 ### GitHub Integration
 
-- **Issues**: Reference with `/gh-issue !<issueNumber>`
-- **Pull Requests**: Reference with `/gh-pullrequest`
+- **Issues**: Reference with `/gh-issue !<issueNumber>` or search by title
+- **Pull Requests**: Reference with `/gh-pullrequest !<prNumber>` or search by title
 - **Comments**: Add `+` for comments (e.g., `!1234+`)
 - **Cross-repo**: Use `gh:<owner>/<repo>` syntax
 
 ### Azure DevOps Integration
 
-- **Work Items**: Reference with `/azd-workitem !<workItemNumber>`
+- **Work Items**: Reference with `/azd-workitem !<workItemNumber>` or search by title
+- **Pull Requests**: Reference with `/azd-pullrequest !<prNumber>` or search by title
 - **Comments**: Add `+` for comments (e.g., `!1234+`)
 - **Cross-org**: Use `azdo:<org>/<project>` syntax
 - **Real API**: Uses Azure DevOps Node.js API with PAT authentication
@@ -58,14 +59,54 @@ The AI parser works as a fallback when:
 @voce What's the status of GitHub issue 456 with all comments?
 @voce Tell me about pull request 789 from microsoft/vscode
 @voce Summarize Azure DevOps task 321 with discussion from contoso/webapp
+@voce Find pull requests about authentication
+@voce Search for PRs containing bugfix
+@voce Show me PRs with security in the title
+@voce Find Azure DevOps PRs about performance optimization
+@voce Search for pull requests with bug fix in Azure DevOps
+@voce Find GitHub issues about login problems
+@voce Search for work items containing performance
+@voce Show me issues with authentication errors
 ```
 
 The AI will automatically:
 
 - Detect the correct command type
-- Extract item IDs
+- Extract item IDs for specific references
+- **🆕 Search pull requests, issues, and work items by title content** (contains search)
 - Understand when you want comments/discussion
 - Parse repository or project context
+
+### 🔍 Title Search
+
+**New Feature**: You can now search for pull requests, issues, and work items by title content instead of just by ID across both GitHub and Azure DevOps!
+
+#### Examples:
+
+```text
+@voce Find pull requests about authentication
+@voce Search for PRs containing bug fix  
+@voce Show me PRs with security in the title
+@voce Look for pull requests about feature implementation
+@voce Find GitHub issues about login
+@voce Search for work items with bug in title
+@voce Show me issues containing authentication
+@voce Find Azure DevOps work items about performance
+```
+
+#### How it works:
+- **Title Search**: Searches titles for containing the specified keywords (case-insensitive)
+- **Multiple Results**: Shows up to 10 matching items with summaries and direct links
+- **Backward Compatible**: Traditional `!<number>` ID searches continue to work unchanged
+- **Comments Support**: Add "with comments" to include comments/discussion
+- **Cross-Platform**: Works with both GitHub and Azure DevOps repositories
+- **Smart Filtering**: GitHub issues search excludes pull requests for clean results
+
+#### Search Results Display:
+- Item number, title, and status/type
+- Brief description preview
+- Direct links to open each item in browser
+- Sorted by most recently updated
 
 ## Setup
 

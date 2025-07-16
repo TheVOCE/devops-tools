@@ -6,9 +6,11 @@ import {
   determineAzDoOrgAndProjectToUse,
   getAzDevOpsOrgAndProject,
 } from "../azd";
+import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { getDescriptionTruncationLength } from "../../consts";
 
 export function StateFullAzDPrInStream(
   stream: vscode.ChatResponseStream,
@@ -25,54 +27,26 @@ export function StateFullAzDPrInStream(
   stream.markdown("\n\n----\n\n");
 }
 
-async function getAzureDevOpsApi(
-  requestHandlerContext: RequestHandlerContext,
-  org: string
-): Promise<WebApi> {
-  const orgUrl = `https://dev.azure.com/${org}`;
+export function StateMultipleAzDPrsInStream(
+  stream: vscode.ChatResponseStream,
+  pullrequests: Array<{ pullRequestId: number; title: string; description: string; status: string; url: string }>,
+  searchQuery: string
+) {
+  stream.markdown(`🔍 Found ${pullrequests.length} pull request${pullrequests.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
   
-  try {
-    // First try to use VS Code Microsoft Account authentication
-    const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
-      createIfNone: false, // Don't prompt user if no session exists
-      clearSessionPreference: false
-    });
-    
-    if (session) {
-      // Use Microsoft authentication token
-      const authHandler = getBearerHandler(session.accessToken);
-      const connection = new WebApi(orgUrl, authHandler);
-      return connection;
+  pullrequests.forEach((pr, index) => {
+    const statusText = (PullRequestStatus as any)[pr.status] || `Status ${pr.status}`;
+    stream.markdown(`${index + 1}. 🔵**PR #${pr.pullRequestId}** [_${statusText}_]: **${pr.title}**\n`);
+    // Show first configured characters of description
+    if (pr.description && pr.description.length > 0) {
+      const truncationLength = getDescriptionTruncationLength();
+      const truncatedDescription = pr.description.length > truncationLength ? pr.description.substring(0, truncationLength) + "..." : pr.description;
+      stream.markdown(`   > ${truncatedDescription.replaceAll("\n", " ")}\n`);
     }
-  } catch (error) {
-    // If Microsoft authentication fails, silently continue to PAT fallback
-    console.log("Microsoft authentication not available, falling back to PAT token");
-  }
-
-  // Fallback to Personal Access Token
-  const config = vscode.workspace.getConfiguration("voce");
-  const pat = config.get("azureDevOpsPat", "") as string;
+    stream.markdown(`   🔗 [View PR #${pr.pullRequestId}](${pr.url})\n\n`);
+  });
   
-  if (!pat) {
-    const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in your settings.";
-    vscode.window.showWarningMessage(message, "Sign In", "Open Settings").then(selection => {
-      if (selection === "Sign In") {
-        // Prompt user to sign in with Microsoft account
-        vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
-          createIfNone: true
-        });
-      } else if (selection === "Open Settings") {
-        vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
-      }
-    });
-    throw new Error(message);
-  }
-  
-  // Create the API connection with PAT
-  const authHandler = getPersonalAccessTokenHandler(pat);
-  const connection = new WebApi(orgUrl, authHandler);
-  
-  return connection;
+  stream.markdown("---\n\n");
 }
 
 async function findRepositoryByRemoteUrl(
@@ -115,6 +89,97 @@ async function findRepositoryByRemoteUrl(
   return matchingRepo.id!;
 }
 
+//search pull requests by title (contains search)
+export async function searchAzdPullrequestsByTitle(
+  requestHandlerContext: RequestHandlerContext,
+  searchQuery: string,
+  azdoOrg: string = "",
+  azdoProject: string = "",
+  withComments = false
+): Promise<AzDevOpsResult[]> {
+  const { org, project } = await determineAzDoOrgAndProjectToUse(
+    azdoOrg,
+    azdoProject,
+    requestHandlerContext
+  );
+
+  try {
+    const orgUrl = `https://dev.azure.com/${org}`;
+    const connection = await getAzureDevOpsConnection(orgUrl);
+    const gitApi: IGitApi = await connection.getGitApi();
+    
+    // Find the repository by matching the remote URL
+    const repoId = await findRepositoryByRemoteUrl(gitApi, project);
+    
+    // Get all pull requests (both open and closed)
+    const allPullRequests = await gitApi.getPullRequests(repoId, {
+      status: undefined // Get all statuses
+    }, project);
+
+    // Filter PRs that contain the search query in the title (case-insensitive)
+    const matchingPRs = allPullRequests.filter(pr => 
+      pr.title && pr.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (matchingPRs.length === 0) {
+      throw new Error(`No pull requests found with title containing "${searchQuery}" in project '${project}'.`);
+    }
+
+    // Limit to 10 results to avoid overwhelming the user
+    const limitedPRs = matchingPRs.slice(0, 10);
+
+    // Convert to AzDevOpsResult array
+    const results: AzDevOpsResult[] = [];
+    for (const pr of limitedPRs) {
+      // Skip PRs without valid ID
+      if (!pr.pullRequestId) {
+        continue;
+      }
+      
+      let comments: AzDevOpsComment[] = [];
+      if (withComments) {
+        try {
+          // Get pull request threads (comments)
+          const threads = await gitApi.getThreads(repoId, pr.pullRequestId, project);
+          
+          // Flatten comments from all threads
+          comments = threads.flatMap(thread => 
+            thread.comments?.map(comment => ({
+              id: comment.id || 0,
+              url: `https://dev.azure.com/${org}/${project}/_git/${pr.repository?.name}/pullrequest/${pr.pullRequestId}`,
+              body: comment.content || ""
+            } as AzDevOpsComment)) || []
+          );
+        } catch (err) {
+          // If comments fail for one PR, continue with others
+          console.warn(`Could not get comments for PR #${pr.pullRequestId}: ${err}`);
+        }
+      }
+
+      // Transform the Azure DevOps pull request to match our expected format
+      const transformedData = {
+        id: pr.pullRequestId,
+        fields: {
+          "System.Title": pr.title || "",
+          "System.Description": pr.description || "",
+          "System.State": (PullRequestStatus as any)[pr.status!] || `Status ${pr.status}`,
+          "System.WorkItemType": "Pull Request"
+        },
+        url: `https://dev.azure.com/${org}/${project}/_git/${pr.repository?.name}/pullrequest/${pr.pullRequestId}`
+      };
+
+      results.push({ data: transformedData, comments: comments });
+    }
+
+    return results;
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('No pull requests found')) {
+      throw err;
+    }
+    throw new Error(`Error searching pull requests with title "${searchQuery}" in project '${project}': ${err}`);
+  }
+}
+
 //get pull request object from Azure DevOps by its PR id
 export async function getAzdPullrequestById(
   requestHandlerContext: RequestHandlerContext,
@@ -133,7 +198,8 @@ export async function getAzdPullrequestById(
   let sharedConnection: WebApi;
   let sharedRepoId: string;
   try {
-    const connection = await getAzureDevOpsApi(requestHandlerContext, org);
+    const orgUrl = `https://dev.azure.com/${org}`;
+    const connection = await getAzureDevOpsConnection(orgUrl);
     const gitApi: IGitApi = await connection.getGitApi();
     
     // Find the repository by matching the remote URL
