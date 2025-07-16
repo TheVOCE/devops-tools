@@ -10,7 +10,7 @@ function mockConfig(hostname) {
 // Test GitHub hostname detection
 function testGitHubRegex(customHostname, remoteUrl) {
     const githubHostname = mockConfig(customHostname) || "github.com";
-    const escapedHostname = githubHostname.replace(/\./g, '\\.');
+    const escapedHostname = githubHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
     const githubRegex = new RegExp(`${escapedHostname}[/:](.+\/.+)\\.git$`);
     
     console.log(`Testing GitHub hostname: ${githubHostname}`);
@@ -31,7 +31,7 @@ function testGitHubRegex(customHostname, remoteUrl) {
 // Test Azure DevOps hostname detection
 function testAzureDevOpsRegex(customHostname, remoteUrl) {
     const azDevOpsHostname = mockConfig(customHostname) || "dev.azure.com";
-    const escapedHostname = azDevOpsHostname.replace(/\./g, '\\.');
+    const escapedHostname = azDevOpsHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
     
     console.log(`Testing Azure DevOps hostname: ${azDevOpsHostname}`);
     console.log(`Remote URL: ${remoteUrl}`);
@@ -39,7 +39,7 @@ function testAzureDevOpsRegex(customHostname, remoteUrl) {
     let match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
     if (!match) {
         const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
-        const escapedSshHostname = sshHostname.replace(/\./g, '\\.');
+        const escapedSshHostname = sshHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
         // SSH format: git@ssh.hostname:v3/org/project/repo - need to skip the v3 part
         match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     }
