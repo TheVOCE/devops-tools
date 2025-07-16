@@ -10,7 +10,8 @@ import { logInfo, logError } from "../logging.js";
 function getAzureDevOpsHostname(): string {
   const config = vscode.workspace.getConfiguration("voce");
   const customHostname = config.get<string>("azd_customhostname");
-  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : "dev.azure.com";
+  const defaultHostname = "dev.azure.com".replace(/\./g, '\\.');
+  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : defaultHostname;
 }
 
 export async function getAzDevOpsOrgAndProject() {
@@ -47,7 +48,7 @@ export async function getAzDevOpsOrgAndProject() {
     logInfo(`Using Azure DevOps hostname: ${azDevOpsHostname}`);
     
     // Escape dots in hostname for regex
-    const escapedHostname = azDevOpsHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+    const escapedHostname = azDevOpsHostname; // Already escaped in getAzureDevOpsHostname
     
     // Azure DevOps remote URL patterns:
     // https://{hostname}/{organization}/{project}/_git/{repo}
