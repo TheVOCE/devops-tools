@@ -58,34 +58,75 @@ export function parseAzDevOpsValuesFromPromptSilent(
 }
 
 /**
- * Get Azure DevOps API connection using PAT token from configuration
+ * Get Azure DevOps API connection with Microsoft Account authentication as primary method and PAT as fallback
  * @param orgUrl The organization URL (e.g., https://dev.azure.com/myorg)
  * @returns Promise<azdev.WebApi> The Azure DevOps WebApi connection
  */
 export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
-  // Try to get stored PAT token
-  logInfo("Retrieving Azure DevOps PAT token from configuration");
+  logInfo("Attempting Azure DevOps connection with Microsoft Account authentication");
+  
+  try {
+    // First try to use VS Code Microsoft Account authentication
+    const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+      createIfNone: false, // Don't prompt user if no session exists
+      clearSessionPreference: false
+    });
+    
+    if (session) {
+      logInfo("Microsoft authentication successful, using Bearer token");
+      // Use Microsoft authentication token
+      const authHandler = azdev.getBearerHandler(session.accessToken);
+      const connection = new azdev.WebApi(orgUrl, authHandler);
+      logInfo(`Successfully created Azure DevOps connection using Microsoft Account for organization: ${orgUrl}`);
+      return connection;
+    }
+  } catch (error) {
+    // If Microsoft authentication fails, silently continue to PAT fallback
+    logInfo("Microsoft authentication not available, falling back to PAT token");
+  }
+
+  logInfo("Falling back to PAT authentication");
+  // Fallback to Personal Access Token
   const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
-  logInfo("Retrieving Azure DevOps connection using PAT token");
 
   if (!token) {
-    // If no token is configured, provide helpful error message
-    const message = "Azure DevOps Personal Access Token not configured. Please set 'voce.azureDevOpsPat' in VS Code settings to enable real Azure DevOps integration.";
+    // If no token is configured, provide helpful error message with both options
+    const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in VS Code settings to enable Azure DevOps integration.";
     
-    // Log to output channel for diagnostic purposes
-    logInfo("Microsoft authentication not available, falling back to PAT token configuration required");
+    logInfo("Neither Microsoft authentication nor PAT token available");
     
-    vscode.window.showWarningMessage(message, "Open Settings").then(selection => {
-      if (selection === "Open Settings") {
-        vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
+    const selection = await vscode.window.showWarningMessage(message, "Sign In", "Open Settings");
+    
+    if (selection === "Sign In") {
+      logInfo("User chose to sign in with Microsoft account");
+      // Prompt user to sign in with Microsoft account
+      try {
+        const newSession = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+          createIfNone: true
+        });
+        
+        if (newSession) {
+          logInfo("Microsoft authentication successful after user prompt");
+          const authHandler = azdev.getBearerHandler(newSession.accessToken);
+          const connection = new azdev.WebApi(orgUrl, authHandler);
+          logInfo(`Successfully created Azure DevOps connection using Microsoft Account after prompt for organization: ${orgUrl}`);
+          return connection;
+        }
+      } catch (authError) {
+        logInfo(`Microsoft authentication failed after user prompt: ${authError}`);
+        throw new Error("Microsoft Account authentication failed. Please try again or configure a PAT token instead.");
       }
-    });
+    } else if (selection === "Open Settings") {
+      logInfo("User chose to open settings for PAT configuration");
+      vscode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
+    }
+    
     throw new Error(message);
   }
 
   logInfo(`Using Azure DevOps PAT token for organization: ${orgUrl}`);
   const authHandler = azdev.getPersonalAccessTokenHandler(token);
   const connection = new azdev.WebApi(orgUrl, authHandler);
-  logInfo(`Successfully created Azure DevOps connection for organization: ${orgUrl}`);
+  logInfo(`Successfully created Azure DevOps connection using PAT token for organization: ${orgUrl}`);
   return connection;
 }

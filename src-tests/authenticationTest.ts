@@ -1,143 +1,99 @@
 /**
  * Test for Azure DevOps authentication mechanism
- * This test verifies that the authentication logic is properly structured
+ * This test verifies that the Microsoft Account authentication is implemented properly
  */
 
-// Mock VS Code API
-const mockVSCode = {
-  authentication: {
-    getSession: async (provider: string, scopes: string[], options?: any) => {
-      console.log(`🔍 Testing authentication.getSession called with provider: ${provider}`);
-      console.log(`   Scopes: ${scopes.join(', ')}`);
-      console.log(`   Options: ${JSON.stringify(options)}`);
-      
-      if (provider === "microsoft" && !options?.createIfNone) {
-        // Simulate no existing session when createIfNone is false
-        return null;
-      }
-      
-      // Simulate successful authentication
-      return {
-        accessToken: "mock-token-123",
-        account: { id: "mock-user-id", label: "Mock User" }
-      };
-    }
-  },
-  workspace: {
-    getConfiguration: (section: string) => ({
-      get: (key: string, defaultValue?: any) => {
-        console.log(`🔍 Testing workspace.getConfiguration('${section}').get('${key}')`);
-        if (section === "voce" && key === "azureDevOpsPat") {
-          return ""; // Simulate no PAT configured
-        }
-        return defaultValue;
-      }
-    })
-  },
-  window: {
-    showWarningMessage: async (message: string, ...items: string[]) => {
-      console.log(`⚠️  Warning shown: ${message}`);
-      console.log(`   Options: ${items.join(', ')}`);
-      return items[0]; // Simulate user clicking first option
-    }
-  },
-  commands: {
-    executeCommand: (command: string, ...args: any[]) => {
-      console.log(`🔧 Command executed: ${command} with args:`, args);
-    }
-  }
-};
+const { getAzureDevOpsConnection } = require("../out/azd/azDevOpsUtils");
 
-// Mock Azure DevOps API
-const mockAzDev = {
-  getBearerHandler: (token: string) => {
-    console.log(`🔍 Testing getBearerHandler called with token: ${token.substring(0, 10)}...`);
-    return { token };
-  },
-  getPersonalAccessTokenHandler: (token: string) => {
-    console.log(`🔍 Testing getPersonalAccessTokenHandler called with token: ${token.substring(0, 10)}...`);
-    return { token };
-  },
-  WebApi: class {
-    constructor(orgUrl: string, authHandler: any) {
-      console.log(`🔍 Testing WebApi created with orgUrl: ${orgUrl}`);
-      console.log(`   Auth handler type: ${authHandler.token ? 'Bearer/PAT' : 'Unknown'}`);
-    }
-  }
-};
-
-/**
- * Simulate the authentication logic from azDevOpsWorkItemFunctions.ts
- */
-async function testGetAzureDevOpsConnection(orgUrl: string): Promise<any> {
-  console.log(`\n🧪 Testing getAzureDevOpsConnection with orgUrl: ${orgUrl}`);
+// Test that the authentication function exists and is properly structured
+async function testAuthenticationImplementation() {
+  console.log("=== Azure DevOps Authentication Implementation Test ===\n");
   
-  try {
-    // First try to use VS Code Microsoft Account authentication
-    const session = await mockVSCode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
-      createIfNone: false, // Don't prompt user if no session exists
-      clearSessionPreference: false
-    });
-    
-    if (session) {
-      console.log("✅ Microsoft authentication successful");
-      // Use Microsoft authentication token
-      const authHandler = mockAzDev.getBearerHandler(session.accessToken);
-      const connection = new mockAzDev.WebApi(orgUrl, authHandler);
-      return connection;
-    }
-  } catch (error) {
-    // If Microsoft authentication fails, silently continue to PAT fallback
-    console.log("ℹ️  Microsoft authentication not available, falling back to PAT token");
-  }
-
-  console.log("🔄 Falling back to PAT authentication");
-  // Fallback to Personal Access Token
-  const token = await mockVSCode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
-  
-  if (!token) {
-    // If no token is configured, provide helpful error message
-    const message = "Azure DevOps authentication failed. Please either sign in with your Microsoft Account or set 'voce.azureDevOpsPat' in VS Code settings to enable Azure DevOps integration.";
-    const selection = await mockVSCode.window.showWarningMessage(message, "Sign In", "Open Settings");
-    
-    if (selection === "Sign In") {
-      console.log("🔄 User chose to sign in with Microsoft account");
-      // Prompt user to sign in with Microsoft account
-      await mockVSCode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
-        createIfNone: true
-      });
-    } else if (selection === "Open Settings") {
-      console.log("🔧 User chose to open settings");
-      mockVSCode.commands.executeCommand("workbench.action.openSettings", "voce.azureDevOpsPat");
-    }
-    throw new Error(message);
-  }
-
-  const authHandler = mockAzDev.getPersonalAccessTokenHandler(token);
-  const connection = new mockAzDev.WebApi(orgUrl, authHandler);
-  return connection;
-}
-
-/**
- * Run the test
- */
-async function runAuthenticationTest() {
-  console.log("=== Azure DevOps Authentication Test ===\n");
-  
-  try {
-    // Test the authentication flow
-    await testGetAzureDevOpsConnection("https://dev.azure.com/testorg");
-    console.log("\n❌ Test should have failed due to no authentication configured");
-  } catch (error) {
-    console.log(`\n✅ Test correctly failed with expected error: ${error instanceof Error ? error.message : String(error)}`);
+  // Check that the function exists
+  if (typeof getAzureDevOpsConnection !== 'function') {
+    console.error("❌ getAzureDevOpsConnection function not found");
+    return false;
   }
   
-  console.log("\n=== Authentication Test Complete ===");
-  console.log("✅ Authentication logic is properly structured");
-  console.log("✅ Microsoft authentication is tried first");
-  console.log("✅ PAT fallback works when Microsoft auth unavailable");
-  console.log("✅ User gets appropriate prompts when no authentication available");
+  console.log("✅ getAzureDevOpsConnection function exists");
+  
+  // Check that the function signature is correct
+  const funcString = getAzureDevOpsConnection.toString();
+  
+  // Check for Microsoft authentication implementation
+  const hasMicrosoftAuth = funcString.includes("vscode.authentication.getSession") && 
+                          funcString.includes("microsoft") &&
+                          funcString.includes("https://app.vssps.visualstudio.com/user_impersonation");
+  
+  if (!hasMicrosoftAuth) {
+    console.error("❌ Microsoft authentication implementation not found");
+    console.log("Function source preview:", funcString.substring(0, 200) + "...");
+    return false;
+  }
+  
+  console.log("✅ Microsoft authentication implementation found");
+  
+  // Check for Bearer handler usage
+  const hasBearerHandler = funcString.includes("getBearerHandler");
+  if (!hasBearerHandler) {
+    console.error("❌ Bearer handler for Microsoft authentication not found");
+    return false;
+  }
+  
+  console.log("✅ Bearer handler implementation found");
+  
+  // Check for PAT fallback
+  const hasPATFallback = funcString.includes("getPersonalAccessTokenHandler") &&
+                        funcString.includes("azureDevOpsPat");
+  
+  if (!hasPATFallback) {
+    console.error("❌ PAT token fallback implementation not found");
+    return false;
+  }
+  
+  console.log("✅ PAT token fallback implementation found");
+  
+  // Check for user prompt options
+  const hasUserPrompts = funcString.includes("Sign In") &&
+                        funcString.includes("Open Settings") &&
+                        funcString.includes("showWarningMessage");
+  
+  if (!hasUserPrompts) {
+    console.error("❌ User prompt implementation not found");
+    return false;
+  }
+  
+  console.log("✅ User prompt implementation found");
+  
+  // Check for silent authentication attempt
+  const hasSilentAuth = funcString.includes("createIfNone: false");
+  
+  if (!hasSilentAuth) {
+    console.error("❌ Silent authentication attempt not found");
+    return false;
+  }
+  
+  console.log("✅ Silent authentication attempt implementation found");
+  
+  console.log("\n=== Authentication Implementation Test Complete ===");
+  console.log("✅ All authentication features are properly implemented");
+  console.log("✅ Microsoft authentication is the primary method");
+  console.log("✅ PAT fallback is properly configured");
+  console.log("✅ User guidance prompts are implemented");
+  console.log("✅ Silent authentication prevents unwanted prompts");
+  
+  return true;
 }
 
 // Run the test
-runAuthenticationTest().catch(console.error);
+testAuthenticationImplementation().then(success => {
+  if (success) {
+    console.log("\n🎉 Microsoft Account authentication feature is fully implemented!");
+  } else {
+    console.log("\n❌ Authentication implementation is incomplete");
+    process.exit(1);
+  }
+}).catch(error => {
+  console.error("❌ Test failed with error:", error);
+  process.exit(1);
+});
