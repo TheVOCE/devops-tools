@@ -46,7 +46,7 @@ export async function getGitHubOwnerAndRepo() {
     logInfo(`Using GitHub hostname: ${githubHostname}`);
     
     // Escape dots in hostname for regex
-    const escapedHostname = githubHostname.replace(/\./g, '\\.');
+    const escapedHostname = githubHostname.replace(/[\\.]/g, '\\$&');
     const githubRegex = new RegExp(`${escapedHostname}[/:](.+\/.+)\\.git$`);
     
     const match = remoteUrl.match(githubRegex);
