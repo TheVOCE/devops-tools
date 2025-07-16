@@ -56,8 +56,8 @@ export async function getAzDevOpsOrgAndProject() {
     let match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
     if (!match) {
       // Try SSH pattern - for Azure DevOps Server, SSH might be ssh.{hostname}
-      const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
-      const escapedSshHostname = sshHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+      const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com".replace(/\./g, '\\.') : `ssh.${azDevOpsHostname}`.replace(/\./g, '\\.');
+      const escapedSshHostname = sshHostname.replace(/\\/g, '\\\\');
       match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     }
     if (!match) {
