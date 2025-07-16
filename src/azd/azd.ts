@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
+import escapeStringRegexp from "escape-string-regexp";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
 
@@ -10,8 +11,8 @@ import { logInfo, logError } from "../logging.js";
 function getAzureDevOpsHostname(): string {
   const config = vscode.workspace.getConfiguration("voce");
   const customHostname = config.get<string>("azd_customhostname");
-  const defaultHostname = "dev.azure.com".replace(/\./g, '\\.');
-  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : defaultHostname;
+  const defaultHostname = escapeStringRegexp("dev.azure.com");
+  return customHostname && customHostname.trim() !== "" ? escapeStringRegexp(customHostname.trim()) : defaultHostname;
 }
 
 export async function getAzDevOpsOrgAndProject() {
@@ -58,7 +59,7 @@ export async function getAzDevOpsOrgAndProject() {
     if (!match) {
       // Try SSH pattern - for Azure DevOps Server, SSH might be ssh.{hostname}
       const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
-      const escapedSshHostname = sshHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+      const escapedSshHostname = escapeStringRegexp(sshHostname);
       match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     }
     if (!match) {
