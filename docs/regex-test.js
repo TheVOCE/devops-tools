@@ -40,6 +40,7 @@ function testAzureDevOpsRegex(customHostname, remoteUrl) {
     if (!match) {
         const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
         const escapedSshHostname = sshHostname.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
+        console.log(`Escaped SSH Hostname: ${escapedSshHostname}`);
         // SSH format: git@ssh.hostname:v3/org/project/repo - need to skip the v3 part
         match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     }
