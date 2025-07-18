@@ -7,9 +7,10 @@ import { determineAzDoOrgAndProjectToUse } from "../azd";
 import { getAzureDevOpsConnection } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
-import { logInfo } from "../../logging.js";
+import { logError, logInfo } from "../../logging.js";
 import { OPEN_URL_COMMAND, getDescriptionTruncationLength } from "../../consts";
 import sanitizeHtml from "sanitize-html";
+import { log } from "console";
 
 /**
  * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
@@ -295,6 +296,7 @@ export async function getWorkItemAndCommentsById(
       throw new Error(`Work item !${workItemId} not found`);
     }
   } catch (err) {
+    logError(`Error getting work item !${workItemId} from Azure DevOps: ${err}`);
     // If API call fails (e.g., no authentication), use mock data
     requestHandlerContext.stream.progress("⚠️ Using mock data - configure Azure DevOps PAT for real data");
     useMockData = true;
