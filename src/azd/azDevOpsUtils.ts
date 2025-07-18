@@ -64,61 +64,52 @@ export function parseAzDevOpsValuesFromPromptSilent(
  */
 export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.WebApi> {
   logInfo("Attempting Azure DevOps connection with Microsoft Account authentication");
-  
-  try {
-    // Use the correct Azure DevOps resource scope for Microsoft authentication
-    // NOTE: This requires admin consent for the Azure DevOps resource in your Azure AD tenant.
-    // See: https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/authentication-guidance?view=azure-devops
-    // If you see a 'user is not allowed' error, your admin must grant consent for this app to access Azure DevOps.
-    const session = await vscode.authentication.getSession(
-      "microsoft",
-      ["499b84ac-1321-427f-aa17-267ca6975798/.default",
-        "Profile",
-        "openid", // Ensure we have the necessary scopes for authentication
-        "offline_access" // Include offline access for long-lived session
-      ],
-      {
-        createIfNone: true, // Prompt user if no session exists
-        clearSessionPreference: true
+
+  // Try modern .default scope first, then legacy user_impersonation scope if needed
+  const scopes = [
+    "499b84ac-1321-427f-aa17-267ca6975798/.default",
+    "https://app.vssps.visualstudio.com/user_impersonation"
+  ];
+  for (const scope of scopes) {
+    try {
+      const session = await vscode.authentication.getSession(
+        "microsoft",
+        [scope],
+        {
+          createIfNone: true,
+          clearSessionPreference: true
+        }
+      );
+      if (session) {
+        logInfo(`Microsoft authentication successful with scope '${scope}', using Bearer token`);
+        const authHandler = azdev.getBearerHandler(session.accessToken);
+        const connection = new azdev.WebApi(orgUrl, authHandler);
+        connection.connect();
+        logInfo(`Successfully created Azure DevOps connection using Microsoft Account for organization: ${orgUrl}`);
+        return connection;
       }
-    );
-    if (session) {
-      logInfo("Microsoft authentication successful, using Bearer token");
-      const authHandler = azdev.getBearerHandler(session.accessToken);
-      const connection = new azdev.WebApi(orgUrl, authHandler);
-      connection.connect();
-      logInfo(`Successfully created Azure DevOps connection using Microsoft Account for organization: ${orgUrl}`);
-      return connection;
-    } else {
-      logInfo("No Microsoft authentication session found.");
+    } catch (error) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof (error as any).message === 'string' &&
+        (error as any).message.includes('user is not allowed')
+      ) {
+        const consentMsg = `Azure DevOps OAuth authentication failed with scope '${scope}': User is not allowed.\n\nThis usually means your Azure AD admin must grant consent for the Azure DevOps resource (499b84ac-1321-427f-aa17-267ca6975798) to this app. See Azure Portal > Azure Active Directory > Enterprise Applications > (your app) > Permissions.`;
+        logInfo(consentMsg);
+        vscode.window.showErrorMessage(consentMsg);
+      } else {
+        logInfo(`Microsoft authentication not available or failed with scope '${scope}': ${error}`);
+      }
     }
-  } catch (error) {
-    // Detect consent/permission errors and provide a clear message
-    if (
-      error &&
-      typeof error === 'object' &&
-      'message' in error &&
-      typeof (error as any).message === 'string' &&
-      (error as any).message.includes('user is not allowed')
-    ) {
-      const consentMsg = `Azure DevOps OAuth authentication failed: User is not allowed.\n\nThis usually means your Azure AD admin must grant consent for the Azure DevOps resource (499b84ac-1321-427f-aa17-267ca6975798) to this app. See Azure Portal > Azure Active Directory > Enterprise Applications > (your app) > Permissions.`;
-      logInfo(consentMsg);
-      vscode.window.showErrorMessage(consentMsg);
-    } else {
-      logInfo(`Microsoft authentication not available or failed: ${error}`);
-    }
-    // Continue to PAT fallback
   }
 
-  logInfo("Falling back to PAT authentication");
   // Fallback to Personal Access Token (PAT)
-  // PAT is required for real data access in most Azure DevOps organizations, especially if OAuth/Entra ID is not permitted or lacks permissions.
-  // To generate a PAT: In Azure DevOps, go to User Settings → Personal Access Tokens, create a new token with 'Work Items (Read & Write)' scope, and copy it.
-  // In VS Code, open settings and set 'voce.azureDevOpsPat' to your new PAT.
+  logInfo("Falling back to PAT authentication");
   const token = await vscode.workspace.getConfiguration("voce").get("azureDevOpsPat") as string;
 
   if (!token) {
-    // If no token is configured, provide helpful error message with both options
     const message = `Azure DevOps authentication failed.\n\nTo access real Azure DevOps data, you must configure a Personal Access Token (PAT).\n\n1. In Azure DevOps, go to User Settings → Personal Access Tokens.\n2. Create a new PAT with 'Work Items (Read & Write)' scope.\n3. In VS Code, open settings and set 'voce.azureDevOpsPat' to your new PAT.\n\nAlternatively, try signing in with your Microsoft Account if your organization allows it.`;
 
     logInfo("Neither Microsoft authentication nor PAT token available");
@@ -127,15 +118,14 @@ export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.We
 
     if (selection === "Sign In") {
       logInfo("User chose to sign in with Microsoft account");
-      // Prompt user to sign in with Microsoft account
       try {
-        const newSession = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
+        const session = await vscode.authentication.getSession("microsoft", ["https://app.vssps.visualstudio.com/user_impersonation"], {
           createIfNone: true
         });
 
-        if (newSession) {
+        if (session) {
           logInfo("Microsoft authentication successful after user prompt");
-          const authHandler = azdev.getBearerHandler(newSession.accessToken);
+          const authHandler = azdev.getBearerHandler(session.accessToken);
           const connection = new azdev.WebApi(orgUrl, authHandler);
           logInfo(`Successfully created Azure DevOps connection using Microsoft Account after prompt for organization: ${orgUrl}`);
           return connection;
