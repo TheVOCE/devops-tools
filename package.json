@@ -170,6 +170,6 @@
         "eslint": "^9.31.0",
         "simple-git": "^3.28.0",
         "typescript": "^5.8.2",
-        "typescript-eslint": "^8.36.0"
+        "typescript-eslint": "^8.38.0"
     }
 }
