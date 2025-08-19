@@ -169,7 +169,7 @@
         "@vscode/vsce": "^3.6.0",
         "eslint": "^9.33.0",
         "simple-git": "^3.28.0",
-        "typescript": "^5.8.2",
-        "typescript-eslint": "^8.38.0"
+        "typescript": "^5.9.2",
+        "typescript-eslint": "^8.39.1"
     }
 }
