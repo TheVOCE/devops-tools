@@ -161,7 +161,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
-        "@octokit/rest": "^22.0.0",
+        "@octokit/rest": "^22.0.1",
         "@stylistic/eslint-plugin": "^5.6.1",
         "@types/node": "^25",
         "@types/sanitize-html": "^2.16.0",
