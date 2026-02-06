@@ -2,12 +2,14 @@ const fs = require('fs');
 const path = require('path');
 
 const installerDir = 'installer';
-if (!fs.existsSync(installerDir)) {
-    fs.mkdirSync(installerDir);
-}
-fs.readdirSync('.')
-    .filter(f => f.endsWith('.vsix'))
-    .forEach(f => {
+const vsixFiles = fs.readdirSync('.')
+    .filter(f => f.endsWith('.vsix'));
+
+if (vsixFiles.length > 0) {
+    if (!fs.existsSync(installerDir)) {
+        fs.mkdirSync(installerDir);
+    }
+    vsixFiles.forEach(f => {
         const dest = path.join(installerDir, f);
         if (fs.existsSync(f)) {
             try {
@@ -17,3 +19,4 @@ fs.readdirSync('.')
             }
         }
     });
+}
