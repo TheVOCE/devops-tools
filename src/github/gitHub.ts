@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
+import escapeStringRegexp from "escape-string-regexp";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
 
@@ -45,8 +46,8 @@ export async function getGitHubOwnerAndRepo() {
     const githubHostname = getGitHubHostname();
     logInfo(`Using GitHub hostname: ${githubHostname}`);
     
-    // Escape dots in hostname for regex
-    const escapedHostname = githubHostname.replace(/[\\.]/g, '\\$&');
+    // Escape hostname for use in regex pattern
+    const escapedHostname = escapeStringRegexp(githubHostname);
     const githubRegex = new RegExp(`${escapedHostname}[/:](.+\/.+)\\.git$`);
     
     const match = remoteUrl.match(githubRegex);
