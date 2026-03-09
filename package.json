@@ -162,7 +162,7 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@octokit/rest": "^22.0.1",
-        "@stylistic/eslint-plugin": "^5.9.0",
+        "@stylistic/eslint-plugin": "^5.10.0",
         "@types/node": "^25",
         "@types/sanitize-html": "^2.16.0",
         "@types/vscode": "^1.109.0",
