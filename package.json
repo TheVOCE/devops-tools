@@ -164,7 +164,7 @@
         "@octokit/rest": "^22.0.1",
         "@stylistic/eslint-plugin": "^5.9.0",
         "@types/node": "^25",
-        "@types/sanitize-html": "^2.16.0",
+        "@types/sanitize-html": "^2.16.1",
         "@types/vscode": "^1.109.0",
         "@vscode/vsce": "^3.7.1",
         "eslint": "^10.0.3",
