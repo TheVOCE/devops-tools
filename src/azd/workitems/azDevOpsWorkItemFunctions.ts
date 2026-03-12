@@ -10,7 +10,6 @@ import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logError, logInfo } from "../../logging.js";
 import { OPEN_URL_COMMAND, getDescriptionTruncationLength } from "../../consts";
 import sanitizeHtml from "sanitize-html";
-import { log } from "console";
 
 /**
  * Sanitizes HTML content from work item fields, removing HTML tags and keeping only plain text
@@ -231,7 +230,7 @@ export async function searchAzdWorkItemsByTitle(
           }
         } catch (err) {
           // If comments fail for one work item, continue with others
-          console.warn(`Could not get comments for work item #${workItem.id}: ${err}`);
+          logInfo(`Could not get comments for work item #${workItem.id}: ${err}`);
         }
       }
 
