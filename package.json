@@ -167,7 +167,7 @@
         "@types/sanitize-html": "^2.16.1",
         "@types/vscode": "^1.110.0",
         "@vscode/vsce": "^3.7.1",
-        "eslint": "^10.0.3",
+        "eslint": "^10.1.0",
         "simple-git": "^3.33.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.57.0"
