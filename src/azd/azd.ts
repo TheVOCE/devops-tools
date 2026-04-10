@@ -61,14 +61,8 @@ export async function determineAzDoOrgAndProjectToUse(
   azdoProject: string,
   requestHandlerContext: RequestHandlerContext
 ) {
-  // For now, we'll use personal access token authentication
-  // In a real implementation, you might want to use VS Code authentication API
-  // const session = await vscode.authentication.getSession("azure-devops", ["vso.code"], {
-  //   createIfNone: true,
-  // });
-  
-  // For Azure DevOps, we'll need to get a PAT token or use OAuth
-  // This is a placeholder for authentication
+  // Authentication is now handled in the individual API functions
+  // Microsoft Account authentication is tried first, with PAT fallback
   let org = azdoOrg;
   let project = azdoProject;
 

@@ -39,6 +39,12 @@
             "scopes": [
                 "repo"
             ]
+        },
+        {
+            "id": "microsoft",
+            "scopes": [
+                "https://app.vssps.visualstudio.com/user_impersonation"
+            ]
         }
     ],
     "contributes": {
