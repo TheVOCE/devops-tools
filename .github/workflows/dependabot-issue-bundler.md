@@ -16,7 +16,7 @@ network:
     - defaults              # Basic infrastructure
     - python               # Python/PyPI ecosystem
     - node                 # Node.js/NPM ecosystem
-    - "learn.microsoft.com:443"
+    - "learn.microsoft.com"
 
 safe-outputs:
   create-issue:
