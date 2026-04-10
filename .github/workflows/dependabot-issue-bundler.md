@@ -11,6 +11,13 @@ permissions:
 tools:
   github:
 
+network:
+  allowed:
+    - defaults              # Basic infrastructure
+    - python               # Python/PyPI ecosystem
+    - node                 # Node.js/NPM ecosystem
+    - "learn.microsoft.com:443"
+
 safe-outputs:
   create-issue:
     title-prefix: '[dependabot-bundler] '
