@@ -1,8 +1,18 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
+import escapeStringRegexp from "escape-string-regexp";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
+
+/**
+ * Get the configured Azure DevOps hostname (custom or default)
+ */
+function getAzureDevOpsHostname(): string {
+  const config = vscode.workspace.getConfiguration("voce");
+  const customHostname = config.get<string>("azd_customhostname");
+  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : "dev.azure.com";
+}
 
 export async function getAzDevOpsOrgAndProject() {
   const editor = vscode.window.activeTextEditor;
@@ -34,17 +44,29 @@ export async function getAzDevOpsOrgAndProject() {
       logInfo(`Remote URL: ${remoteUrl}`);
     }
 
+    const azDevOpsHostname = getAzureDevOpsHostname();
+    logInfo(`Using Azure DevOps hostname: ${azDevOpsHostname}`);
+    
+    // Escape hostname for use in regex pattern
+    const escapedHostname = escapeStringRegexp(azDevOpsHostname);
+    
     // Azure DevOps remote URL patterns:
-    // https://dev.azure.com/{organization}/{project}/_git/{repo}
+    // https://{hostname}/{organization}/{project}/_git/{repo}
     // or
-    // git@ssh.dev.azure.com:v3/{organization}/{project}/{repo}
-    let match = remoteUrl.match(/dev\.azure\.com[/:]([^/]+)\/([^/]+)/);
+    // git@ssh.{hostname}:v3/{organization}/{project}/{repo}
+    //
+    // Try the SSH pattern first: the SSH hostname (ssh.{hostname}) contains the
+    // HTTPS hostname as a substring, so matching HTTPS first would incorrectly
+    // capture the "v3" segment as the organization.
+    const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
+    const escapedSshHostname = escapeStringRegexp(sshHostname);
+    let match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     if (!match) {
-      // Try SSH pattern
-      match = remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)/);
+      // Fall back to the HTTPS pattern.
+      match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
     }
     if (!match) {
-      logError("Remote repository is not an Azure DevOps repository.");
+      logError(`Remote repository is not an Azure DevOps repository on ${azDevOpsHostname}.`);
       return;
     }
 

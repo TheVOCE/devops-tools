@@ -6,7 +6,7 @@ import {
   determineAzDoOrgAndProjectToUse,
   getAzDevOpsOrgAndProject,
 } from "../azd";
-import { getAzureDevOpsConnection } from "../azDevOpsUtils";
+import { getAzureDevOpsConnection, getAzureDevOpsOrgUrl, getAzureDevOpsPullRequestUrl } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
@@ -34,10 +34,7 @@ export function StateMultipleAzDPrsInStream(
   searchQuery: string
 ) {
   stream.markdown(`🔍 Found ${pullrequests.length} pull request${pullrequests.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
-  return await getAzureDevOpsConnection(orgUrl);
-}
-
-async function getAzureDevOpsConnection(orgUrl: string): Promise<WebApi> {
+  
   pullrequests.forEach((pr, index) => {
     const statusText = (PullRequestStatus as any)[pr.status] || `Status ${pr.status}`;
     stream.markdown(`${index + 1}. 🔵**PR #${pr.pullRequestId}** [_${statusText}_]: **${pr.title}**\n`);
@@ -108,7 +105,7 @@ export async function searchAzdPullrequestsByTitle(
   );
 
   try {
-    const orgUrl = `https://dev.azure.com/${org}`;
+    const orgUrl = getAzureDevOpsOrgUrl(org);
     const connection = await getAzureDevOpsConnection(orgUrl);
     const gitApi: IGitApi = await connection.getGitApi();
     
@@ -150,7 +147,7 @@ export async function searchAzdPullrequestsByTitle(
           comments = threads.flatMap(thread => 
             thread.comments?.map(comment => ({
               id: comment.id || 0,
-              url: `https://dev.azure.com/${org}/${project}/_git/${pr.repository?.name}/pullrequest/${pr.pullRequestId}`,
+              url: getAzureDevOpsPullRequestUrl(org, project, pr.repository?.name || '', pr.pullRequestId || 0),
               body: comment.content || ""
             } as AzDevOpsComment)) || []
           );
@@ -169,7 +166,7 @@ export async function searchAzdPullrequestsByTitle(
           "System.State": (PullRequestStatus as any)[pr.status!] || `Status ${pr.status}`,
           "System.WorkItemType": "Pull Request"
         },
-        url: `https://dev.azure.com/${org}/${project}/_git/${pr.repository?.name}/pullrequest/${pr.pullRequestId}`
+        url: getAzureDevOpsPullRequestUrl(org, project, pr.repository?.name || '', pr.pullRequestId || 0)
       };
 
       results.push({ data: transformedData, comments: comments });
@@ -202,7 +199,7 @@ export async function getAzdPullrequestById(
   let sharedConnection: WebApi;
   let sharedRepoId: string;
   try {
-    const orgUrl = `https://dev.azure.com/${org}`;
+    const orgUrl = getAzureDevOpsOrgUrl(org);
     const connection = await getAzureDevOpsConnection(orgUrl);
     const gitApi: IGitApi = await connection.getGitApi();
     
@@ -228,7 +225,7 @@ export async function getAzdPullrequestById(
       comments = threads.flatMap(thread => 
         thread.comments?.map(comment => ({
           id: comment.id || 0,
-          url: `https://dev.azure.com/${org}/${project}/_git/${pullrequest.repository?.name}/pullrequest/${pullRequestId}`,
+          url: getAzureDevOpsPullRequestUrl(org, project, pullrequest.repository?.name || '', pullRequestId),
           body: comment.content || ""
         } as AzDevOpsComment)) || []
       );
@@ -243,7 +240,7 @@ export async function getAzdPullrequestById(
       "System.State": PullRequestStatus[pullrequest.status] || "",
       "System.WorkItemType": "Pull Request"
       },
-      url: `https://dev.azure.com/${org}/${project}/_git/${pullrequest.repository?.name}/pullrequest/${pullRequestId}`
+      url: getAzureDevOpsPullRequestUrl(org, project, pullrequest.repository?.name || '', pullRequestId)
     };
 
     return { data: transformedData, comments: comments };

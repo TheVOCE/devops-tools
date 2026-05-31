@@ -4,7 +4,7 @@ import { IWorkItemTrackingApi } from "azure-devops-node-api/WorkItemTrackingApi"
 import { WorkItem, Comment, WorkItemExpand } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import { determineAzDoOrgAndProjectToUse } from "../azd";
-import { getAzureDevOpsConnection } from "../azDevOpsUtils";
+import { getAzureDevOpsConnection, getAzureDevOpsOrgUrl, getAzureDevOpsWorkItemUrl } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { logError, logInfo } from "../../logging.js";
@@ -161,7 +161,7 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
       "Microsoft.VSTS.TCM.ReproSteps": "Mock repro steps for bug testing.",
       "Microsoft.VSTS.TCM.SystemInfo": "OS: Windows 10\nBrowser: Chrome 120.0.6099.199\nResolution: 1920x1080"
     },
-    url: `https://dev.azure.com/${org}/${project}/_workitems/edit/${workItemId}`
+    url: getAzureDevOpsWorkItemUrl(org, project, workItemId)
   };
 }
 
@@ -179,7 +179,7 @@ export async function searchAzdWorkItemsByTitle(
     requestHandlerContext
   );
 
-  const orgUrl = `https://dev.azure.com/${org}`;
+  const orgUrl = getAzureDevOpsOrgUrl(org);
   let useMockData = false;
 
   try {
@@ -279,7 +279,7 @@ export async function getWorkItemAndCommentsById(
     requestHandlerContext
   );
 
-  const orgUrl = `https://dev.azure.com/${org}`;
+  const orgUrl = getAzureDevOpsOrgUrl(org);
 
   let workItem: WorkItem;
   let useMockData = false;

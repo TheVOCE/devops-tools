@@ -1,8 +1,18 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import simpleGit from "simple-git";
+import escapeStringRegexp from "escape-string-regexp";
 import type { RequestHandlerContext } from "../requestHandlerContext";
 import { logInfo, logError } from "../logging.js";
+
+/**
+ * Get the configured GitHub hostname (custom or default)
+ */
+function getGitHubHostname(): string {
+  const config = vscode.workspace.getConfiguration("voce");
+  const customHostname = config.get<string>("gh_customhostname");
+  return customHostname && customHostname.trim() !== "" ? customHostname.trim() : "github.com";
+}
 
 export async function getGitHubOwnerAndRepo() {
   const editor = vscode.window.activeTextEditor;
@@ -33,9 +43,16 @@ export async function getGitHubOwnerAndRepo() {
     const remoteUrl = remotes[0].refs.fetch;
     logInfo(`Remote URL: ${remoteUrl}`);
 
-    const match = remoteUrl.match(/github\.com[/:](.+\/.+)\.git$/);
+    const githubHostname = getGitHubHostname();
+    logInfo(`Using GitHub hostname: ${githubHostname}`);
+    
+    // Escape hostname for use in regex pattern
+    const escapedHostname = escapeStringRegexp(githubHostname);
+    const githubRegex = new RegExp(`${escapedHostname}[/:](.+\/.+)\\.git$`);
+    
+    const match = remoteUrl.match(githubRegex);
     if (!match) {
-      logError("Remote repository is not a GitHub repository.");
+      logError(`Remote repository is not a GitHub repository on ${githubHostname}.`);
       return;
     }
 
@@ -55,7 +72,17 @@ export async function determineGhOwnerAndRepoToUse(
     createIfNone: true,
   });
   const { Octokit } = await import("@octokit/rest");
-  const octokit = new Octokit({ auth: session.accessToken });
+  
+  const githubHostname = getGitHubHostname();
+  const octokitOptions: any = { auth: session.accessToken };
+  
+  // For custom GitHub Server installations, set the baseUrl
+  if (githubHostname !== "github.com") {
+    octokitOptions.baseUrl = `https://${githubHostname}/api/v3`;
+    logInfo(`Using custom GitHub Server baseUrl: ${octokitOptions.baseUrl}`);
+  }
+  
+  const octokit = new Octokit(octokitOptions);
   let owner = ghOwner;
   let repo = ghRepo;
 

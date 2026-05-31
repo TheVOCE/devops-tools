@@ -113,6 +113,16 @@
                     "minimum": 50,
                     "maximum": 2000,
                     "description": "Description truncation length"
+                },
+                "voce.gh_customhostname": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom hostname for GitHub Server (onpremise). Example: 'github.company.com'. Leave empty to use github.com."
+                },
+                "voce.azd_customhostname": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom hostname for Azure DevOps Server (onpremise). Example: 'devops.company.com'. Leave empty to use dev.azure.com."
                 }
             }
         },
@@ -163,6 +173,7 @@
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1",
         "@vscode/prompt-tsx": "^0.4.0-alpha.8",
         "azure-devops-node-api": "^15.1.2",
+        "escape-string-regexp": "^4.0.0",
         "sanitize-html": "^2.17.4"
     },
     "devDependencies": {
@@ -173,6 +184,7 @@
         "@types/sanitize-html": "^2.16.1",
         "@types/vscode": "^1.120.0",
         "@vscode/vsce": "^3.9.1",
+        "esbuild": "^0.27.3",
         "eslint": "^10.4.0",
         "simple-git": "^3.36.0",
         "typescript": "^6.0.3",
