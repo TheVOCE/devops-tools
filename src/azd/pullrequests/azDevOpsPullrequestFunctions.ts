@@ -34,10 +34,7 @@ export function StateMultipleAzDPrsInStream(
   searchQuery: string
 ) {
   stream.markdown(`🔍 Found ${pullrequests.length} pull request${pullrequests.length !== 1 ? 's' : ''} with title containing "${searchQuery}":\n\n`);
-  return await getAzureDevOpsConnection(orgUrl);
-}
 
-async function getAzureDevOpsConnection(orgUrl: string): Promise<WebApi> {
   pullrequests.forEach((pr, index) => {
     const statusText = (PullRequestStatus as any)[pr.status] || `Status ${pr.status}`;
     stream.markdown(`${index + 1}. 🔵**PR #${pr.pullRequestId}** [_${statusText}_]: **${pr.title}**\n`);
