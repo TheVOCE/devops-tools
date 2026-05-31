@@ -39,6 +39,12 @@
             "scopes": [
                 "repo"
             ]
+        },
+        {
+            "id": "microsoft",
+            "scopes": [
+                "https://app.vssps.visualstudio.com/user_impersonation"
+            ]
         }
     ],
     "contributes": {
@@ -165,23 +171,23 @@
     },
     "dependencies": {
         "@vscode/chat-extension-utils": "^0.0.0-alpha.1",
-        "@vscode/prompt-tsx": "^0.4.0-alpha.5",
-        "azure-devops-node-api": "^15.1.0",
-        "esbuild": "^0.27.3",
-        "escape-string-regexp": "^5.0.0",
-        "sanitize-html": "^2.17.0"
+        "@vscode/prompt-tsx": "^0.4.0-alpha.8",
+        "azure-devops-node-api": "^15.1.2",
+        "escape-string-regexp": "^4.0.0",
+        "sanitize-html": "^2.17.4"
     },
     "devDependencies": {
-        "@eslint/js": "^9.31.0",
-        "@octokit/rest": "^22.0.0",
-        "@stylistic/eslint-plugin": "^5.1.0",
-        "@types/node": "^24",
-        "@types/sanitize-html": "^2.16.0",
-        "@types/vscode": "^1.102.0",
-        "@vscode/vsce": "^3.6.0",
-        "eslint": "^9.31.0",
-        "simple-git": "^3.28.0",
-        "typescript": "^5.8.2",
-        "typescript-eslint": "^8.36.0"
+        "@eslint/js": "^10.0.1",
+        "@octokit/rest": "^22.0.1",
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "@types/node": "^25",
+        "@types/sanitize-html": "^2.16.1",
+        "@types/vscode": "^1.120.0",
+        "@vscode/vsce": "^3.9.1",
+        "esbuild": "^0.27.3",
+        "eslint": "^10.4.0",
+        "simple-git": "^3.36.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.59.4"
     }
 }

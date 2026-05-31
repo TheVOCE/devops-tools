@@ -7,7 +7,7 @@ import { determineAzDoOrgAndProjectToUse } from "../azd";
 import { getAzureDevOpsConnection, getAzureDevOpsOrgUrl, getAzureDevOpsWorkItemUrl } from "../azDevOpsUtils";
 import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
-import { logInfo } from "../../logging.js";
+import { logError, logInfo } from "../../logging.js";
 import { OPEN_URL_COMMAND, getDescriptionTruncationLength } from "../../consts";
 import sanitizeHtml from "sanitize-html";
 
@@ -154,7 +154,7 @@ function getMockWorkItem(workItemId: number, org: string, project: string) {
     id: workItemId,
     fields: {
       "System.Title": `Mock Work Item ${workItemId}`,
-      "System.Description": "This is mock data. Configure Azure DevOps PAT token for real data.",
+      "System.Description": "This is mock data. Sign in with your Microsoft Account or configure Azure DevOps PAT token for real data.",
       "System.State": "Active",
       "System.WorkItemType": "Task",
       "Microsoft.VSTS.Common.AcceptanceCriteria": "Mock acceptance criteria for testing purposes.",
@@ -230,7 +230,7 @@ export async function searchAzdWorkItemsByTitle(
           }
         } catch (err) {
           // If comments fail for one work item, continue with others
-          console.warn(`Could not get comments for work item #${workItem.id}: ${err}`);
+          logInfo(`Could not get comments for work item #${workItem.id}: ${err}`);
         }
       }
 
@@ -295,7 +295,8 @@ export async function getWorkItemAndCommentsById(
       throw new Error(`Work item !${workItemId} not found`);
     }
   } catch (err) {
-    // If API call fails (e.g., no PAT token), use mock data
+    logError(`Error getting work item !${workItemId} from Azure DevOps: ${err}`);
+    // If API call fails (e.g., no authentication), use mock data
     requestHandlerContext.stream.progress("⚠️ Using mock data - configure Azure DevOps PAT for real data");
     useMockData = true;
     workItem = getMockWorkItem(workItemId, org, project) as WorkItem;

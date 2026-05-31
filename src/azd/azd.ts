@@ -54,12 +54,16 @@ export async function getAzDevOpsOrgAndProject() {
     // https://{hostname}/{organization}/{project}/_git/{repo}
     // or
     // git@ssh.{hostname}:v3/{organization}/{project}/{repo}
-    let match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
+    //
+    // Try the SSH pattern first: the SSH hostname (ssh.{hostname}) contains the
+    // HTTPS hostname as a substring, so matching HTTPS first would incorrectly
+    // capture the "v3" segment as the organization.
+    const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
+    const escapedSshHostname = escapeStringRegexp(sshHostname);
+    let match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
     if (!match) {
-      // Try SSH pattern - for Azure DevOps Server, SSH might be ssh.{hostname}
-      const sshHostname = azDevOpsHostname === "dev.azure.com" ? "ssh.dev.azure.com" : `ssh.${azDevOpsHostname}`;
-      const escapedSshHostname = escapeStringRegexp(sshHostname);
-      match = remoteUrl.match(new RegExp(`${escapedSshHostname}:v3\\/([^/]+)\\/([^/]+)`));
+      // Fall back to the HTTPS pattern.
+      match = remoteUrl.match(new RegExp(`${escapedHostname}[/:]([^/]+)\\/([^/]+)`));
     }
     if (!match) {
       logError(`Remote repository is not an Azure DevOps repository on ${azDevOpsHostname}.`);
@@ -79,14 +83,8 @@ export async function determineAzDoOrgAndProjectToUse(
   azdoProject: string,
   requestHandlerContext: RequestHandlerContext
 ) {
-  // For now, we'll use personal access token authentication
-  // In a real implementation, you might want to use VS Code authentication API
-  // const session = await vscode.authentication.getSession("azure-devops", ["vso.code"], {
-  //   createIfNone: true,
-  // });
-  
-  // For Azure DevOps, we'll need to get a PAT token or use OAuth
-  // This is a placeholder for authentication
+  // Authentication is now handled in the individual API functions
+  // Microsoft Account authentication is tried first, with PAT fallback
   let org = azdoOrg;
   let project = azdoProject;
 

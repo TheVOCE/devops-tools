@@ -4,9 +4,25 @@ This extension supports Azure DevOps work items similar to GitHub issues functio
 
 ## Setup
 
-### Azure DevOps Personal Access Token
+### Authentication Options
 
-To use real Azure DevOps data, configure a Personal Access Token:
+The extension supports two authentication methods:
+
+1. **Microsoft Account** (Recommended): Uses your VS Code Microsoft Account authentication automatically
+2. **Personal Access Token**: Manual token configuration as fallback
+
+#### Microsoft Account Authentication
+
+No setup required! The extension will prompt you to sign in when needed:
+
+1. Use any Azure DevOps command for the first time
+2. If prompted, sign in with your Microsoft Account
+3. Grant permission to access Azure DevOps
+4. The extension will remember your authentication
+
+#### Personal Access Token (Fallback)
+
+If Microsoft authentication is unavailable:
 
 1. Go to `https://dev.azure.com/{your-org}` → Profile → Personal access tokens
 2. Create a token with **Work Items: Read** scope

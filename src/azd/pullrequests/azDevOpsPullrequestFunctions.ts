@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
+import { WebApi } from "azure-devops-node-api";
 import { IGitApi } from "azure-devops-node-api/GitApi";
 import type { RequestHandlerContext } from "../../requestHandlerContext";
 import {
@@ -11,6 +11,7 @@ import { type AzDevOpsComment } from "../AzDevOpsComment";
 import { type AzDevOpsResult } from "../AzDevOpsResult";
 import { PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { getDescriptionTruncationLength } from "../../consts";
+import { logInfo } from "../../logging.js";
 
 export function StateFullAzDPrInStream(
   stream: vscode.ChatResponseStream,
@@ -152,7 +153,7 @@ export async function searchAzdPullrequestsByTitle(
           );
         } catch (err) {
           // If comments fail for one PR, continue with others
-          console.warn(`Could not get comments for PR #${pr.pullRequestId}: ${err}`);
+          logInfo(`Could not get comments for PR #${pr.pullRequestId}: ${err}`);
         }
       }
 
