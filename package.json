@@ -175,7 +175,7 @@
         "@vscode/vsce": "^3.9.2",
         "eslint": "^10.6.0",
         "simple-git": "^3.36.0",
-        "typescript": "^6.0.3",
+        "typescript": "^7.0.2",
         "typescript-eslint": "^8.63.0"
     }
 }
