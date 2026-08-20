@@ -66,28 +66,24 @@ export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.We
   logInfo("Attempting Azure DevOps connection with Microsoft Account authentication");
 
   // Silently check for an existing Microsoft session — no UI prompt at this stage
-  const scopes = [
-    "499b84ac-1321-427f-aa17-267ca6975798/.default",
-    "https://app.vssps.visualstudio.com/user_impersonation"
-  ];
-  for (const scope of scopes) {
-    try {
-      const session = await vscode.authentication.getSession(
-        "microsoft",
-        [scope],
-        { createIfNone: false }
-      );
-      if (session) {
-        logInfo(`Microsoft authentication successful with scope '${scope}', using Bearer token`);
-        const authHandler = azdev.getBearerHandler(session.accessToken);
-        const connection = new azdev.WebApi(orgUrl, authHandler);
-        connection.connect();
-        logInfo(`Successfully created Azure DevOps connection using Microsoft Account for organization: ${orgUrl}`);
-        return connection;
-      }
-    } catch (error) {
-      logInfo(`Microsoft authentication not available with scope '${scope}': ${error}`);
+  try {
+    // 499b84ac-1321-427f-aa17-267ca6975798 is the well-known resource/app ID of Azure DevOps.
+    // The "/.default" suffix is required by the MSAL-based VS Code Microsoft authentication
+    // provider; the legacy "user_impersonation" scope is rejected as an invalid scope.
+    const session = await vscode.authentication.getSession(
+      "microsoft",
+      ["499b84ac-1321-427f-aa17-267ca6975798/.default"],
+      { createIfNone: false }
+    );
+    if (session) {
+      logInfo("Microsoft authentication successful (existing session)");
+      const authHandler = azdev.getBearerHandler(session.accessToken);
+      const connection = new azdev.WebApi(orgUrl, authHandler);
+      logInfo(`Successfully created Azure DevOps connection using Microsoft Account for organization: ${orgUrl}`);
+      return connection;
     }
+  } catch (error) {
+    logInfo(`Microsoft authentication not available silently: ${error}`);
   }
 
   // Fallback to Personal Access Token (PAT)
@@ -120,7 +116,7 @@ export async function getAzureDevOpsConnection(orgUrl: string): Promise<azdev.We
     try {
       const session = await vscode.authentication.getSession(
         "microsoft",
-        ["https://app.vssps.visualstudio.com/user_impersonation"],
+        ["499b84ac-1321-427f-aa17-267ca6975798/.default"],
         { createIfNone: true }
       );
 
