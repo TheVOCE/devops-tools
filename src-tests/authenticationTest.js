@@ -19,7 +19,7 @@ async function testAuthenticationImplementation() {
     // Check for Microsoft authentication implementation
     const hasMicrosoftAuth = funcString.includes("vscode.authentication.getSession") &&
         funcString.includes("microsoft") &&
-        funcString.includes("https://app.vssps.visualstudio.com/user_impersonation");
+        funcString.includes("499b84ac-1321-427f-aa17-267ca6975798/.default");
     if (!hasMicrosoftAuth) {
         console.error("❌ Microsoft authentication implementation not found");
         console.log("Function source preview:", funcString.substring(0, 200) + "...");
@@ -43,7 +43,7 @@ async function testAuthenticationImplementation() {
     console.log("✅ PAT token fallback implementation found");
     // Check for user prompt options
     const hasUserPrompts = funcString.includes("Sign In") &&
-        funcString.includes("Open Settings") &&
+        funcString.includes("Configure PAT Token") &&
         funcString.includes("showWarningMessage");
     if (!hasUserPrompts) {
         console.error("❌ User prompt implementation not found");
