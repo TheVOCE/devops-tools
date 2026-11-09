@@ -171,7 +171,7 @@
         "@stylistic/eslint-plugin": "^5.10.0",
         "@types/node": "^26",
         "@types/sanitize-html": "^2.16.2",
-        "@types/vscode": "^1.144.0",
+        "@types/vscode": "^1.145.0",
         "@vscode/vsce": "^4.1.0",
         "eslint": "^10.13.0",
         "simple-git": "^4.0.2",
